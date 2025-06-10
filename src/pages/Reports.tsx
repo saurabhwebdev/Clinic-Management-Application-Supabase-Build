@@ -6,14 +6,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Download, Calendar, Users, Receipt, TrendingUp, Activity, FileBarChart } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 
-// Extend Window interface to include jsPDF
-declare global {
-  interface Window {
-    jspdf: any;
-    html2canvas: any;
+// Extend jsPDF with autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
   }
 }
 
@@ -60,8 +59,8 @@ const Reports = () => {
       doc.setFontSize(11);
       doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 14, 32);
       
-      // Add table
-      (doc as any).autoTable({
+      // Add table using autoTable plugin
+      autoTable(doc, {
         head: [['ID', 'Name', 'Age', 'Gender', 'Total Visits', 'Last Visit']],
         body: patientData.map(patient => [
           patient.id,
@@ -99,8 +98,8 @@ const Reports = () => {
       doc.setFontSize(11);
       doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 14, 32);
       
-      // Add table
-      (doc as any).autoTable({
+      // Add table using autoTable plugin
+      autoTable(doc, {
         head: [['ID', 'Patient', 'Date', 'Time', 'Status', 'Doctor']],
         body: appointmentData.map(appointment => [
           appointment.id,
@@ -138,8 +137,8 @@ const Reports = () => {
       doc.setFontSize(11);
       doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 14, 32);
       
-      // Add table
-      (doc as any).autoTable({
+      // Add table using autoTable plugin
+      autoTable(doc, {
         head: [['Invoice ID', 'Patient', 'Date', 'Amount', 'Status']],
         body: invoiceData.map(invoice => [
           invoice.id,
