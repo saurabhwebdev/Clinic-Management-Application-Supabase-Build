@@ -36,6 +36,7 @@ import {
   Package,
   LogOut,
   User,
+  FileBarChart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -109,6 +110,12 @@ const Navbar = () => {
                     icon={<Package size={18} />} 
                     label="Inventory" 
                     isActive={isActive("/inventory")} 
+                  />
+                  <NavItem 
+                    to="/reports" 
+                    icon={<FileBarChart size={18} />} 
+                    label="Reports" 
+                    isActive={isActive("/reports")} 
                   />
                   <NavItem 
                     to="/settings" 
@@ -247,6 +254,14 @@ const Navbar = () => {
                               label="Inventory" 
                               icon={<Package size={18} />}
                               isActive={isActive("/inventory")} 
+                            />
+                          </SheetClose>
+                          <SheetClose asChild>
+                            <MobileNavItem 
+                              to="/reports" 
+                              label="Reports" 
+                              icon={<FileBarChart size={18} />}
+                              isActive={isActive("/reports")} 
                             />
                           </SheetClose>
                           <SheetClose asChild>
