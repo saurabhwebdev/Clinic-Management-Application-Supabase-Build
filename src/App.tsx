@@ -16,6 +16,7 @@ import PatientDetail from "./pages/PatientDetail";
 import Appointments from "./pages/Appointments";
 import Prescriptions from "./pages/Prescriptions";
 import Invoices from "./pages/Invoices";
+import Inventory from "./pages/Inventory";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/appointments" element={<Appointments />} />
               <Route path="/prescriptions" element={<Prescriptions />} />
               <Route path="/invoices" element={<Invoices />} />
+              <Route path="/inventory" element={<Inventory />} />
             </Route>
             
             {/* Catch-all route */}

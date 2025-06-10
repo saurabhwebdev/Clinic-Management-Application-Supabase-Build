@@ -25,6 +25,7 @@ import {
   Receipt,
   Settings,
   Menu,
+  Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -105,6 +106,12 @@ const Navbar = () => {
                   isActive={isActive("/invoices")} 
                 />
                 <NavItem 
+                  to="/inventory" 
+                  icon={<Package size={18} />} 
+                  label="Inventory" 
+                  isActive={isActive("/inventory")} 
+                />
+                <NavItem 
                   to="/settings" 
                   icon={<Settings size={18} />} 
                   label="Settings" 
@@ -159,6 +166,12 @@ const Navbar = () => {
                     <Link to="/invoices" className="flex items-center">
                       <Receipt size={16} className="mr-2" />
                       <span>Invoices</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/inventory" className="flex items-center">
+                      <Package size={16} className="mr-2" />
+                      <span>Inventory</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -222,6 +235,12 @@ const Navbar = () => {
                   label="Invoices" 
                   icon={<Receipt size={18} />}
                   isActive={isActive("/invoices")} 
+                />
+                <MobileNavItem 
+                  to="/inventory" 
+                  label="Inventory" 
+                  icon={<Package size={18} />}
+                  isActive={isActive("/inventory")} 
                 />
                 <MobileNavItem 
                   to="/settings" 
