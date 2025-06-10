@@ -424,7 +424,7 @@ const Prescriptions = () => {
             {isLoading ? (
               <div className="text-center py-4">Loading prescriptions...</div>
             ) : filteredPrescriptions.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="text-center py-8 flex flex-col items-center justify-center">
                 <p className="text-muted-foreground mb-4">
                   {searchQuery ? 'No prescriptions match your search.' : 'No prescriptions found'}
                 </p>
