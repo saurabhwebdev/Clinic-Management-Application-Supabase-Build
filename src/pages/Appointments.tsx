@@ -105,7 +105,7 @@ const Appointments = () => {
   const [formData, setFormData] = useState({
     patient_id: '',
     title: '',
-    date: '',
+    date: format(new Date(), 'yyyy-MM-dd'), // Initialize with current date
     start_time: '',
     end_time: '',
     status: 'scheduled',
@@ -191,7 +191,10 @@ const Appointments = () => {
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setFormData((prev) => ({ ...prev, date: format(date, 'yyyy-MM-dd') }));
+      // Ensure date is formatted correctly for the database
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      console.log("Setting date to:", formattedDate);
+      setFormData((prev) => ({ ...prev, date: formattedDate }));
     }
   };
 
@@ -238,10 +241,48 @@ const Appointments = () => {
       if (!user) return;
       
       // Validate form data
-      if (!formData.patient_id || !formData.title || !formData.date || !formData.start_time || !formData.end_time) {
+      console.log("Form data for validation:", formData);
+      
+      if (!formData.patient_id) {
         toast({
           title: 'Error',
-          description: 'Please fill in all required fields.',
+          description: 'Please select a patient.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.title) {
+        toast({
+          title: 'Error',
+          description: 'Please enter an appointment title.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.date) {
+        toast({
+          title: 'Error',
+          description: 'Please select a date.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.start_time) {
+        toast({
+          title: 'Error',
+          description: 'Please select a start time.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.end_time) {
+        toast({
+          title: 'Error',
+          description: 'End time is missing.',
           variant: 'destructive',
         });
         return;
@@ -282,7 +323,7 @@ const Appointments = () => {
       setFormData({
         patient_id: '',
         title: '',
-        date: '',
+        date: format(new Date(), 'yyyy-MM-dd'), // Reset with current date
         start_time: '',
         end_time: '',
         status: 'scheduled',
@@ -310,10 +351,48 @@ const Appointments = () => {
       if (!currentAppointment) return;
       
       // Validate form data
-      if (!formData.patient_id || !formData.title || !formData.date || !formData.start_time || !formData.end_time) {
+      console.log("Edit form data for validation:", formData);
+      
+      if (!formData.patient_id) {
         toast({
           title: 'Error',
-          description: 'Please fill in all required fields.',
+          description: 'Please select a patient.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.title) {
+        toast({
+          title: 'Error',
+          description: 'Please enter an appointment title.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.date) {
+        toast({
+          title: 'Error',
+          description: 'Please select a date.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.start_time) {
+        toast({
+          title: 'Error',
+          description: 'Please select a start time.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.end_time) {
+        toast({
+          title: 'Error',
+          description: 'End time is missing.',
           variant: 'destructive',
         });
         return;
