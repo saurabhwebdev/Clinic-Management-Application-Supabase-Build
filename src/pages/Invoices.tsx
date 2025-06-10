@@ -363,6 +363,7 @@ const Invoices = () => {
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
+        total_price: item.amount,
         amount: item.amount,
       }));
 
@@ -443,6 +444,7 @@ const Invoices = () => {
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
+        total_price: item.amount,
         amount: item.amount,
       }));
 
