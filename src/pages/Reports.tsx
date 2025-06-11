@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Download, Calendar, Users, Receipt, Loader2 } from 'lucide-react';
+import { FileText, Download, Calendar, Users, Receipt, Loader2, Package } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format, parseISO } from 'date-fns';
@@ -56,6 +56,20 @@ interface Invoice {
   currency_symbol: string;
 }
 
+interface InventoryItem {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  quantity: number;
+  unit: string | null;
+  reorder_level: number | null;
+  cost_price: number | null;
+  selling_price: number | null;
+  supplier: string | null;
+  location: string | null;
+}
+
 interface ClinicInfo {
   clinicName: string;
   address: string;
@@ -73,6 +87,7 @@ const Reports = () => {
     patients: true,
     appointments: true,
     invoices: true,
+    inventory: true,
     clinic: true
   });
   
@@ -80,6 +95,7 @@ const Reports = () => {
   const [patientData, setPatientData] = useState<Patient[]>([]);
   const [appointmentData, setAppointmentData] = useState<Appointment[]>([]);
   const [invoiceData, setInvoiceData] = useState<Invoice[]>([]);
+  const [inventoryData, setInventoryData] = useState<InventoryItem[]>([]);
   const [clinicInfo, setClinicInfo] = useState<ClinicInfo>({
     clinicName: "",
     address: "",
@@ -95,6 +111,7 @@ const Reports = () => {
       fetchPatients();
       fetchAppointments();
       fetchInvoices();
+      fetchInventory();
       fetchClinicInfo();
     }
   }, [user]);
@@ -229,6 +246,32 @@ const Reports = () => {
       });
     } finally {
       setIsLoading(prev => ({ ...prev, invoices: false }));
+    }
+  };
+
+  // Fetch inventory items from Supabase
+  const fetchInventory = async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, inventory: true }));
+      
+      const { data, error } = await supabase
+        .from('inventory')
+        .select('id, name, description, category, quantity, unit, reorder_level, cost_price, selling_price, supplier, location')
+        .eq('user_id', user?.id)
+        .order('name', { ascending: true });
+      
+      if (error) throw error;
+      
+      setInventoryData(data || []);
+    } catch (error) {
+      console.error('Error fetching inventory:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch inventory data. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(prev => ({ ...prev, inventory: false }));
     }
   };
 
@@ -461,6 +504,71 @@ const Reports = () => {
     }
   };
 
+  // Function to generate PDF for inventory
+  const generateInventoryReport = () => {
+    setIsGenerating(true);
+    try {
+      const doc = new jsPDF();
+      
+      // Add clinic header
+      const startY = addClinicHeader(doc);
+      
+      // Add title
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Inventory Report', 14, startY);
+      
+      // Add date
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 14, startY + 6);
+      
+      // Add table using autoTable plugin
+      autoTable(doc, {
+        head: [['Name', 'Category', 'Quantity', 'Unit', 'Location', 'Reorder Level']],
+        body: inventoryData.map(item => [
+          item.name,
+          item.category || 'N/A',
+          item.quantity.toString(),
+          item.unit || 'N/A',
+          item.location || 'N/A',
+          item.reorder_level?.toString() || 'N/A'
+        ]),
+        startY: startY + 10,
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246] },
+        // Add custom styles for rows with low stock
+        didParseCell: function(data) {
+          const item = inventoryData[data.row.index];
+          // Check if this is a data row (not header) and item is low on stock
+          if (data.section === 'body' && item && item.reorder_level && item.quantity <= item.reorder_level) {
+            data.cell.styles.textColor = [220, 38, 38]; // Red color for low stock items
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+      });
+      
+      // Add a note about low stock items
+      const finalY = (doc as any).lastAutoTable.finalY || startY + 10;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(220, 38, 38);
+      doc.text('* Items in red indicate low stock (quantity at or below reorder level)', 14, finalY + 10);
+      
+      // Save PDF
+      doc.save('inventory-report.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-6 max-w-7xl">
@@ -482,6 +590,10 @@ const Reports = () => {
             <TabsTrigger value="invoices" className="flex items-center gap-2">
               <Receipt size={16} />
               <span>Invoices</span>
+            </TabsTrigger>
+            <TabsTrigger value="inventory" className="flex items-center gap-2">
+              <Package size={16} />
+              <span>Inventory</span>
             </TabsTrigger>
           </TabsList>
           
@@ -582,6 +694,44 @@ const Reports = () => {
                       <Button 
                         onClick={generateInvoiceReport} 
                         disabled={isGenerating || invoiceData.length === 0}
+                        size="sm"
+                        className="h-8"
+                      >
+                        {isGenerating ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <FileText size={14} />
+                        )}
+                        <span className="ml-1">Export</span>
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Inventory Report Tab */}
+          <TabsContent value="inventory">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="shadow-sm">
+                <CardHeader className="py-3 px-4">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Package size={16} />
+                    Inventory List
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="py-2 px-4 pb-4">
+                  {isLoading.inventory || isLoading.clinic ? (
+                    <div className="flex justify-center items-center py-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">{inventoryData.length} items</span>
+                      <Button 
+                        onClick={generateInventoryReport} 
+                        disabled={isGenerating || inventoryData.length === 0}
                         size="sm"
                         className="h-8"
                       >
