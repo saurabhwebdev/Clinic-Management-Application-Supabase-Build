@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Download, Calendar, Users, Receipt, TrendingUp, Activity, FileBarChart, Loader2 } from 'lucide-react';
+import { FileText, Download, Calendar, Users, Receipt, Loader2 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format, parseISO } from 'date-fns';
@@ -464,7 +464,7 @@ const Reports = () => {
   return (
     <Layout>
       <div className="container mx-auto py-6 max-w-7xl">
-        <div className="mb-6">
+        <div className="mb-4">
           <h1 className="text-3xl font-bold">Reports</h1>
           <p className="text-gray-500 mt-1">Generate and export clinic reports</p>
         </div>
@@ -483,358 +483,118 @@ const Reports = () => {
               <Receipt size={16} />
               <span>Invoices</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <TrendingUp size={16} />
-              <span>Analytics</span>
-            </TabsTrigger>
           </TabsList>
           
           {/* Patients Report Tab */}
           <TabsContent value="patients">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users size={18} />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="shadow-sm">
+                <CardHeader className="py-3 px-4">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Users size={16} />
                     Patient List
                   </CardTitle>
-                  <CardDescription>Export a list of all patients</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500 mb-4">
-                    This report includes patient details such as name, date of birth, gender, contact information, and more.
-                  </p>
+                <CardContent className="py-2 px-4 pb-4">
                   {isLoading.patients || isLoading.clinic ? (
-                    <div className="flex justify-center items-center py-4">
-                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                    <div className="flex justify-center items-center py-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-500">
-                      <p className="font-medium">Available Data:</p>
-                      <p>{patientData.length} patients</p>
-                      {clinicInfo.clinicName && (
-                        <p className="mt-2 text-blue-600">Clinic information will be included in the report</p>
-                      )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">{patientData.length} patients</span>
+                      <Button 
+                        onClick={generatePatientReport} 
+                        disabled={isGenerating || patientData.length === 0}
+                        size="sm"
+                        className="h-8"
+                      >
+                        {isGenerating ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <FileText size={14} />
+                        )}
+                        <span className="ml-1">Export</span>
+                      </Button>
                     </div>
                   )}
                 </CardContent>
-                <CardFooter>
-                  <Button 
-                    onClick={generatePatientReport} 
-                    disabled={isGenerating || isLoading.patients || isLoading.clinic || patientData.length === 0}
-                    className="w-full flex items-center gap-2"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Generating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FileText size={16} />
-                        <span>Export as PDF</span>
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity size={18} />
-                    Patient Activity
-                  </CardTitle>
-                  <CardDescription>Patient visit frequency report</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">
-                    This report shows patient visit patterns, frequency, and engagement metrics over time.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full flex items-center gap-2" disabled>
-                    <FileText size={16} />
-                    <span>Export as PDF</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileBarChart size={18} />
-                    Demographics
-                  </CardTitle>
-                  <CardDescription>Patient demographic analysis</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">
-                    This report provides insights into patient demographics including age distribution, gender ratio, and location.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full flex items-center gap-2" disabled>
-                    <FileText size={16} />
-                    <span>Export as PDF</span>
-                  </Button>
-                </CardFooter>
               </Card>
             </div>
           </TabsContent>
           
           {/* Appointments Report Tab */}
           <TabsContent value="appointments">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar size={18} />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="shadow-sm">
+                <CardHeader className="py-3 px-4">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Calendar size={16} />
                     Appointment List
                   </CardTitle>
-                  <CardDescription>Export a list of all appointments</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500 mb-4">
-                    This report includes appointment details such as patient name, date, time, status, and assigned doctor.
-                  </p>
+                <CardContent className="py-2 px-4 pb-4">
                   {isLoading.appointments || isLoading.clinic ? (
-                    <div className="flex justify-center items-center py-4">
-                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                    <div className="flex justify-center items-center py-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-500">
-                      <p className="font-medium">Available Data:</p>
-                      <p>{appointmentData.length} appointments</p>
-                      {clinicInfo.clinicName && (
-                        <p className="mt-2 text-blue-600">Clinic information will be included in the report</p>
-                      )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">{appointmentData.length} appointments</span>
+                      <Button 
+                        onClick={generateAppointmentReport} 
+                        disabled={isGenerating || appointmentData.length === 0}
+                        size="sm"
+                        className="h-8"
+                      >
+                        {isGenerating ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <FileText size={14} />
+                        )}
+                        <span className="ml-1">Export</span>
+                      </Button>
                     </div>
                   )}
                 </CardContent>
-                <CardFooter>
-                  <Button 
-                    onClick={generateAppointmentReport} 
-                    disabled={isGenerating || isLoading.appointments || isLoading.clinic || appointmentData.length === 0}
-                    className="w-full flex items-center gap-2"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Generating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FileText size={16} />
-                        <span>Export as PDF</span>
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp size={18} />
-                    Appointment Trends
-                  </CardTitle>
-                  <CardDescription>Appointment scheduling patterns</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">
-                    This report analyzes appointment scheduling patterns, peak hours, and utilization rates.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full flex items-center gap-2" disabled>
-                    <FileText size={16} />
-                    <span>Export as PDF</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity size={18} />
-                    No-Show Analysis
-                  </CardTitle>
-                  <CardDescription>Missed appointment report</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">
-                    This report tracks missed appointments, cancellation rates, and identifies patterns to improve scheduling.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full flex items-center gap-2" disabled>
-                    <FileText size={16} />
-                    <span>Export as PDF</span>
-                  </Button>
-                </CardFooter>
               </Card>
             </div>
           </TabsContent>
           
           {/* Invoices Report Tab */}
           <TabsContent value="invoices">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Receipt size={18} />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="shadow-sm">
+                <CardHeader className="py-3 px-4">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Receipt size={16} />
                     Invoice List
                   </CardTitle>
-                  <CardDescription>Export a list of all invoices</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500 mb-4">
-                    This report includes invoice details such as patient name, date, amount, and payment status.
-                  </p>
+                <CardContent className="py-2 px-4 pb-4">
                   {isLoading.invoices || isLoading.clinic ? (
-                    <div className="flex justify-center items-center py-4">
-                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                    <div className="flex justify-center items-center py-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-500">
-                      <p className="font-medium">Available Data:</p>
-                      <p>{invoiceData.length} invoices</p>
-                      {clinicInfo.clinicName && (
-                        <p className="mt-2 text-blue-600">Clinic information will be included in the report</p>
-                      )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">{invoiceData.length} invoices</span>
+                      <Button 
+                        onClick={generateInvoiceReport} 
+                        disabled={isGenerating || invoiceData.length === 0}
+                        size="sm"
+                        className="h-8"
+                      >
+                        {isGenerating ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <FileText size={14} />
+                        )}
+                        <span className="ml-1">Export</span>
+                      </Button>
                     </div>
                   )}
                 </CardContent>
-                <CardFooter>
-                  <Button 
-                    onClick={generateInvoiceReport} 
-                    disabled={isGenerating || isLoading.invoices || isLoading.clinic || invoiceData.length === 0}
-                    className="w-full flex items-center gap-2"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Generating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FileText size={16} />
-                        <span>Export as PDF</span>
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp size={18} />
-                    Revenue Analysis
-                  </CardTitle>
-                  <CardDescription>Financial performance report</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">
-                    This report provides insights into revenue trends, payment patterns, and financial performance.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full flex items-center gap-2" disabled>
-                    <FileText size={16} />
-                    <span>Export as PDF</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity size={18} />
-                    Outstanding Balances
-                  </CardTitle>
-                  <CardDescription>Unpaid invoices report</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">
-                    This report tracks outstanding payments, aging receivables, and payment collection status.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full flex items-center gap-2" disabled>
-                    <FileText size={16} />
-                    <span>Export as PDF</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          {/* Analytics Report Tab */}
-          <TabsContent value="analytics">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp size={18} />
-                    Clinic Performance
-                  </CardTitle>
-                  <CardDescription>Overall clinic metrics</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">
-                    This report provides a comprehensive overview of clinic performance, including patient volume, revenue, and growth.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full flex items-center gap-2" disabled>
-                    <FileText size={16} />
-                    <span>Export as PDF</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity size={18} />
-                    Staff Productivity
-                  </CardTitle>
-                  <CardDescription>Staff performance metrics</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">
-                    This report analyzes staff productivity, patient load, and efficiency metrics for each healthcare provider.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full flex items-center gap-2" disabled>
-                    <FileText size={16} />
-                    <span>Export as PDF</span>
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileBarChart size={18} />
-                    Resource Utilization
-                  </CardTitle>
-                  <CardDescription>Resource usage analysis</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500">
-                    This report tracks the utilization of clinic resources, equipment, and facilities to optimize operations.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full flex items-center gap-2" disabled>
-                    <FileText size={16} />
-                    <span>Export as PDF</span>
-                  </Button>
-                </CardFooter>
               </Card>
             </div>
           </TabsContent>
