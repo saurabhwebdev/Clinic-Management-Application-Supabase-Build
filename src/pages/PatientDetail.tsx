@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import PatientExport from '@/components/PatientExport';
 
 // Define interfaces
 interface Patient {
@@ -206,6 +207,7 @@ const PatientDetail = () => {
               {patient.first_name} {patient.last_name}
             </h1>
           </div>
+          <PatientExport patientId={id as string} />
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

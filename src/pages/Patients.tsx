@@ -27,7 +27,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Pencil, Trash2, Search, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Pencil, Trash2, Search, UserPlus, ChevronLeft, ChevronRight, MoreVertical, FileText } from 'lucide-react';
+import PatientExport from '@/components/PatientExport';
 
 // Define patient interface
 interface Patient {
@@ -523,7 +530,7 @@ const Patients = () => {
                         <TableHead className="h-9 px-2 text-xs font-medium">DOB</TableHead>
                         <TableHead className="h-9 px-2 text-xs font-medium">Gender</TableHead>
                         <TableHead className="h-9 px-2 text-xs font-medium">Contact</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium w-[80px] text-center">Actions</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium w-[100px] text-center">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -557,15 +564,36 @@ const Patients = () => {
                               >
                                 <Pencil size={16} />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeletePatient(patient.id)}
-                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                title="Delete patient"
-                              >
-                                <Trash2 size={16} />
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                  >
+                                    <MoreVertical size={16} />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem asChild>
+                                    <div className="w-full cursor-pointer">
+                                      <PatientExport 
+                                        patientId={patient.id} 
+                                        buttonVariant="ghost" 
+                                        buttonSize="sm"
+                                        className="w-full justify-start px-2"
+                                      />
+                                    </div>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDeletePatient(patient.id)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 size={16} className="mr-2" />
+                                    Delete Patient
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </TableCell>
                         </TableRow>
