@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, FilePlus, Search, PlusCircle } from 'lucide-react';
+import { Pencil, Trash2, FilePlus, Search, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import PrintInvoice from '@/components/PrintInvoice';
 
@@ -112,6 +112,10 @@ const Invoices = () => {
   const [total, setTotal] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [userRegionId, setUserRegionId] = useState<string>('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     if (user) {
@@ -601,6 +605,17 @@ const Invoices = () => {
   };
 
   const filteredInvoices = getFilteredInvoices();
+  
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredInvoices.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const nextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
 
   return (
     <Layout>
@@ -644,74 +659,129 @@ const Invoices = () => {
                 </div>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table className="border-collapse w-full">
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="h-9 px-2 text-xs font-medium">Date</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Patient</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Status</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Due Date</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Total</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium w-[80px] text-center">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredInvoices.map((invoice) => (
-                      <TableRow key={invoice.id} className="hover:bg-muted/50 border-b border-border/50">
-                        <TableCell className="p-2 text-sm">{formatDate(invoice.invoice_date)}</TableCell>
-                        <TableCell className="p-2 text-sm font-medium">
-                          {invoice.patient.first_name} {invoice.patient.last_name}
-                        </TableCell>
-                        <TableCell className="p-2 text-sm">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
-                            invoice.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="p-2 text-sm">{formatDate(invoice.due_date)}</TableCell>
-                        <TableCell className="p-2 text-sm">
-                          {formatCurrency(invoice.total_amount, invoice.currency_symbol, invoice.currency_code)}
-                        </TableCell>
-                        <TableCell className="p-2 text-sm">
-                          <div className="flex justify-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openPrintDialog(invoice)}
-                              className="h-8 w-8"
-                              title="Print invoice"
-                            >
-                              <FilePlus size={16} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditDialog(invoice)}
-                              className="h-8 w-8"
-                              title="Edit invoice"
-                            >
-                              <Pencil size={16} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openDeleteDialog(invoice)}
-                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              title="Delete invoice"
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </div>
-                        </TableCell>
+              <>
+                <div className="overflow-x-auto">
+                  <Table className="border-collapse w-full">
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="h-9 px-2 text-xs font-medium">Date</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Patient</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Status</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Due Date</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Total</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium w-[80px] text-center">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {currentItems.map((invoice) => (
+                        <TableRow key={invoice.id} className="hover:bg-muted/50 border-b border-border/50">
+                          <TableCell className="p-2 text-sm">{formatDate(invoice.invoice_date)}</TableCell>
+                          <TableCell className="p-2 text-sm font-medium">
+                            {invoice.patient.first_name} {invoice.patient.last_name}
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                              invoice.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">{formatDate(invoice.due_date)}</TableCell>
+                          <TableCell className="p-2 text-sm">
+                            {formatCurrency(invoice.total_amount, invoice.currency_symbol, invoice.currency_code)}
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">
+                            <div className="flex justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openPrintDialog(invoice)}
+                                className="h-8 w-8"
+                                title="Print invoice"
+                              >
+                                <FilePlus size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEditDialog(invoice)}
+                                className="h-8 w-8"
+                                title="Edit invoice"
+                              >
+                                <Pencil size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openDeleteDialog(invoice)}
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                title="Delete invoice"
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                {/* Pagination */}
+                <div className="flex items-center justify-between px-4 py-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredInvoices.length)} of {filteredInvoices.length} invoices
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={prevPage}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      <span className="sr-only">Previous</span>
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => paginate(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={nextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      <span className="sr-only">Next</span>
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

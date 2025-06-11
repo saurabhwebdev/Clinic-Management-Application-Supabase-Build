@@ -41,7 +41,9 @@ import {
   Search, 
   CalendarPlus, 
   Filter,
-  ChevronDown 
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -100,6 +102,10 @@ const Appointments = () => {
     '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
     '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30',
   ]);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Form state for adding/editing appointment
   const [formData, setFormData] = useState({
@@ -531,6 +537,17 @@ const Appointments = () => {
   };
 
   const filteredAppointments = getFilteredAppointments();
+  
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredAppointments.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredAppointments.length / itemsPerPage);
+
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const nextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
 
   // Format date for display
   const formatAppointmentDate = (dateString: string) => {
@@ -789,73 +806,128 @@ const Appointments = () => {
                 </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table className="border-collapse w-full">
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="h-9 px-2 text-xs font-medium">Date & Time</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Patient</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Title</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Status</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium w-[80px] text-center">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAppointments.map((appointment) => (
-                      <TableRow key={appointment.id} className="hover:bg-muted/50 border-b border-border/50">
-                        <TableCell className="p-2 text-sm">
-                          <div className="font-medium">{formatAppointmentDate(appointment.date)}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
-                          </div>
-                        </TableCell>
-                        <TableCell className="p-2 text-sm">
-                          <div className="font-medium">
-                            {appointment.patient?.first_name} {appointment.patient?.last_name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {appointment.patient?.phone || appointment.patient?.email || 'No contact info'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="p-2 text-sm">{appointment.title}</TableCell>
-                        <TableCell className="p-2 text-sm">
-                          <span className={cn(
-                            "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
-                            appointment.status === 'scheduled' && "bg-blue-100 text-blue-800",
-                            appointment.status === 'completed' && "bg-green-100 text-green-800",
-                            appointment.status === 'cancelled' && "bg-red-100 text-red-800",
-                            appointment.status === 'no-show' && "bg-yellow-100 text-yellow-800"
-                          )}>
-                            {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="p-2 text-sm">
-                          <div className="flex justify-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditDialog(appointment)}
-                              className="h-8 w-8"
-                              title="Edit appointment"
-                            >
-                              <Pencil size={16} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteAppointment(appointment.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              title="Delete appointment"
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </div>
-                        </TableCell>
+              <>
+                <div className="overflow-x-auto">
+                  <Table className="border-collapse w-full">
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="h-9 px-2 text-xs font-medium">Date & Time</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Patient</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Title</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Status</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium w-[80px] text-center">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {currentItems.map((appointment) => (
+                        <TableRow key={appointment.id} className="hover:bg-muted/50 border-b border-border/50">
+                          <TableCell className="p-2 text-sm">
+                            <div className="font-medium">{formatAppointmentDate(appointment.date)}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">
+                            <div className="font-medium">
+                              {appointment.patient?.first_name} {appointment.patient?.last_name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {appointment.patient?.phone || appointment.patient?.email || 'No contact info'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">{appointment.title}</TableCell>
+                          <TableCell className="p-2 text-sm">
+                            <span className={cn(
+                              "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
+                              appointment.status === 'scheduled' && "bg-blue-100 text-blue-800",
+                              appointment.status === 'completed' && "bg-green-100 text-green-800",
+                              appointment.status === 'cancelled' && "bg-red-100 text-red-800",
+                              appointment.status === 'no-show' && "bg-yellow-100 text-yellow-800"
+                            )}>
+                              {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">
+                            <div className="flex justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEditDialog(appointment)}
+                                className="h-8 w-8"
+                                title="Edit appointment"
+                              >
+                                <Pencil size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteAppointment(appointment.id)}
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                title="Delete appointment"
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                {/* Pagination */}
+                <div className="flex items-center justify-between px-4 py-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredAppointments.length)} of {filteredAppointments.length} appointments
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={prevPage}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      <span className="sr-only">Previous</span>
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => paginate(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={nextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      <span className="sr-only">Next</span>
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

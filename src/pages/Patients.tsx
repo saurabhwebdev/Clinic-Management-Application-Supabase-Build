@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Pencil, Trash2, Search, UserPlus } from 'lucide-react';
+import { Pencil, Trash2, Search, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Define patient interface
 interface Patient {
@@ -52,6 +52,10 @@ const Patients = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Form state for adding/editing patient
   const [formData, setFormData] = useState({
@@ -299,6 +303,17 @@ const Patients = () => {
       (patient.phone && patient.phone.includes(searchQuery))
     );
   });
+  
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredPatients.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
+
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const nextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
 
   return (
     <Layout>
@@ -499,64 +514,119 @@ const Patients = () => {
                 {searchQuery ? 'No patients match your search.' : 'No patients found. Add your first patient!'}
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table className="border-collapse w-full">
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="h-9 px-2 text-xs font-medium">Name</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">DOB</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Gender</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Contact</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium w-[80px] text-center">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredPatients.map((patient) => (
-                      <TableRow key={patient.id} className="hover:bg-muted/50 border-b border-border/50">
-                        <TableCell className="p-2 text-sm">
-                          <Link to={`/patients/${patient.id}`} className="hover:underline font-medium">
-                            {patient.first_name} {patient.last_name}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="p-2 text-sm">{patient.date_of_birth || '-'}</TableCell>
-                        <TableCell className="p-2 text-sm capitalize">{patient.gender || '-'}</TableCell>
-                        <TableCell className="p-2 text-sm">
-                          {patient.phone || patient.email ? (
-                            <>
-                              {patient.phone && <div>{patient.phone}</div>}
-                              {patient.email && <div className="text-xs text-muted-foreground">{patient.email}</div>}
-                            </>
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
-                        <TableCell className="p-2 text-sm">
-                          <div className="flex justify-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditDialog(patient)}
-                              className="h-8 w-8"
-                              title="Edit patient"
-                            >
-                              <Pencil size={16} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeletePatient(patient.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              title="Delete patient"
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </div>
-                        </TableCell>
+              <>
+                <div className="overflow-x-auto">
+                  <Table className="border-collapse w-full">
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="h-9 px-2 text-xs font-medium">Name</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">DOB</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Gender</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Contact</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium w-[80px] text-center">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {currentItems.map((patient) => (
+                        <TableRow key={patient.id} className="hover:bg-muted/50 border-b border-border/50">
+                          <TableCell className="p-2 text-sm">
+                            <Link to={`/patients/${patient.id}`} className="hover:underline font-medium">
+                              {patient.first_name} {patient.last_name}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">{patient.date_of_birth || '-'}</TableCell>
+                          <TableCell className="p-2 text-sm capitalize">{patient.gender || '-'}</TableCell>
+                          <TableCell className="p-2 text-sm">
+                            {patient.phone || patient.email ? (
+                              <>
+                                {patient.phone && <div>{patient.phone}</div>}
+                                {patient.email && <div className="text-xs text-muted-foreground">{patient.email}</div>}
+                              </>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">
+                            <div className="flex justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEditDialog(patient)}
+                                className="h-8 w-8"
+                                title="Edit patient"
+                              >
+                                <Pencil size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeletePatient(patient.id)}
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                title="Delete patient"
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                {/* Pagination */}
+                <div className="flex items-center justify-between px-4 py-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredPatients.length)} of {filteredPatients.length} patients
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={prevPage}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      <span className="sr-only">Previous</span>
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => paginate(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={nextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      <span className="sr-only">Next</span>
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

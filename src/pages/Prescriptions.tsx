@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, FilePlus, Search, PlusCircle } from 'lucide-react';
+import { Pencil, Trash2, FilePlus, Search, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import PrintPrescription from '@/components/PrintPrescription';
 
@@ -91,6 +91,10 @@ const Prescriptions = () => {
     { medication_name: '', dosage: '', frequency: '', duration: '', instructions: '' },
   ]);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     if (user) {
@@ -393,6 +397,17 @@ const Prescriptions = () => {
   };
 
   const filteredPrescriptions = getFilteredPrescriptions();
+  
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredPrescriptions.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredPrescriptions.length / itemsPerPage);
+
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const nextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
 
   return (
     <Layout>
@@ -434,58 +449,113 @@ const Prescriptions = () => {
                 </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table className="border-collapse w-full">
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="h-9 px-2 text-xs font-medium">Date</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Patient</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Diagnosis</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium">Medications</TableHead>
-                      <TableHead className="h-9 px-2 text-xs font-medium w-[80px] text-center">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredPrescriptions.map((prescription) => (
-                      <TableRow key={prescription.id} className="hover:bg-muted/50 border-b border-border/50">
-                        <TableCell className="p-2 text-sm">{formatDate(prescription.prescription_date)}</TableCell>
-                        <TableCell className="p-2 text-sm font-medium">
-                          {prescription.patient.first_name} {prescription.patient.last_name}
-                        </TableCell>
-                        <TableCell className="p-2 text-sm">{prescription.diagnosis || '-'}</TableCell>
-                        <TableCell className="p-2 text-sm">
-                          {prescription.items.length > 0
-                            ? prescription.items.map((item) => item.medication_name).join(', ')
-                            : '-'}
-                        </TableCell>
-                        <TableCell className="p-2 text-sm">
-                          <div className="flex justify-center gap-1">
-                            <PrintPrescription prescription={prescription} />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditDialog(prescription)}
-                              className="h-8 w-8"
-                              title="Edit prescription"
-                            >
-                              <Pencil size={16} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openDeleteDialog(prescription)}
-                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              title="Delete prescription"
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </div>
-                        </TableCell>
+              <>
+                <div className="overflow-x-auto">
+                  <Table className="border-collapse w-full">
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="h-9 px-2 text-xs font-medium">Date</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Patient</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Diagnosis</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Medications</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium w-[80px] text-center">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {currentItems.map((prescription) => (
+                        <TableRow key={prescription.id} className="hover:bg-muted/50 border-b border-border/50">
+                          <TableCell className="p-2 text-sm">{formatDate(prescription.prescription_date)}</TableCell>
+                          <TableCell className="p-2 text-sm font-medium">
+                            {prescription.patient.first_name} {prescription.patient.last_name}
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">{prescription.diagnosis || '-'}</TableCell>
+                          <TableCell className="p-2 text-sm">
+                            {prescription.items.length > 0
+                              ? prescription.items.map((item) => item.medication_name).join(', ')
+                              : '-'}
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">
+                            <div className="flex justify-center gap-1">
+                              <PrintPrescription prescription={prescription} />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEditDialog(prescription)}
+                                className="h-8 w-8"
+                                title="Edit prescription"
+                              >
+                                <Pencil size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openDeleteDialog(prescription)}
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                title="Delete prescription"
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                {/* Pagination */}
+                <div className="flex items-center justify-between px-4 py-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredPrescriptions.length)} of {filteredPrescriptions.length} prescriptions
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={prevPage}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      <span className="sr-only">Previous</span>
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => paginate(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={nextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      <span className="sr-only">Next</span>
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
