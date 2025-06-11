@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { RegionalData } from '@/components/RegionalSettings';
 
 // Register fonts
 Font.register({
@@ -312,12 +313,55 @@ const styles = StyleSheet.create({
     backgroundColor: '#fee2e2',
     color: '#b91c1c',
   },
+  paymentDetailsBox: {
+    marginTop: 20,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#bfbfbf',
+    borderStyle: 'solid',
+    borderRadius: 4,
+    backgroundColor: '#f9fafb',
+    maxWidth: '50%',
+  },
+  paymentDetailsTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    borderBottomStyle: 'solid',
+    paddingBottom: 3,
+  },
+  paymentDetailsRow: {
+    flexDirection: 'row',
+    marginBottom: 3,
+  },
+  paymentDetailsLabel: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    width: '40%',
+  },
+  paymentDetailsValue: {
+    fontSize: 9,
+    width: '60%',
+  },
+  paymentQRCode: {
+    width: 80,
+    height: 80,
+    marginTop: 5,
+  },
 });
 
-const InvoicePDF = ({ invoice, clinicInfo, doctorInfo }: { 
+const InvoicePDF = ({ 
+  invoice, 
+  clinicInfo, 
+  doctorInfo,
+  regionalData
+}: { 
   invoice: InvoiceData, 
   clinicInfo: ClinicInfo,
-  doctorInfo: DoctorInfo
+  doctorInfo: DoctorInfo,
+  regionalData?: RegionalData
 }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -374,6 +418,73 @@ const InvoicePDF = ({ invoice, clinicInfo, doctorInfo }: {
       default:
         return styles.pendingStatus;
     }
+  };
+
+  // Render payment details based on country
+  const renderPaymentDetails = () => {
+    if (!regionalData) return null;
+
+    // Common payment fields
+    const commonFields = [
+      { label: 'Bank Name', value: regionalData.bank_name },
+      { label: 'Account Number', value: regionalData.account_number },
+    ];
+
+    // Country-specific fields
+    let countrySpecificFields = [];
+    
+    if (invoice.currency_code === 'INR') {
+      countrySpecificFields = [
+        { label: 'IFSC Code', value: regionalData.ifsc_code },
+        { label: 'UPI ID', value: regionalData.upi_id },
+        { label: 'GST Number', value: regionalData.gst_number },
+      ];
+    } else if (invoice.currency_code === 'USD') {
+      countrySpecificFields = [
+        { label: 'Routing Number', value: regionalData.routing_number },
+        { label: 'EIN', value: regionalData.ein },
+      ];
+    } else if (invoice.currency_code === 'GBP') {
+      countrySpecificFields = [
+        { label: 'Sort Code', value: regionalData.sort_code },
+        { label: 'VAT Number', value: regionalData.vat_number },
+      ];
+    } else if (invoice.currency_code === 'EUR') {
+      countrySpecificFields = [
+        { label: 'IBAN', value: regionalData.iban },
+        { label: 'BIC/SWIFT', value: regionalData.bic },
+        { label: 'VAT Number', value: regionalData.vat_number },
+      ];
+    } else {
+      countrySpecificFields = [
+        { label: 'SWIFT Code', value: regionalData.swift_code },
+        { label: 'Tax ID', value: regionalData.tax_id },
+      ];
+    }
+
+    // Filter out empty fields
+    const allFields = [...commonFields, ...countrySpecificFields]
+      .filter(field => field.value);
+
+    if (allFields.length === 0) return null;
+
+    return (
+      <View style={styles.paymentDetailsBox}>
+        <Text style={styles.paymentDetailsTitle}>Payment Details</Text>
+        {allFields.map((field, index) => (
+          <View key={index} style={styles.paymentDetailsRow}>
+            <Text style={styles.paymentDetailsLabel}>{field.label}:</Text>
+            <Text style={styles.paymentDetailsValue}>{field.value}</Text>
+          </View>
+        ))}
+        {regionalData.upi_qr_code && invoice.currency_code === 'INR' && (
+          <View style={{ alignItems: 'center', marginTop: 5 }}>
+            <Text style={{ fontSize: 9, fontWeight: 'bold', marginBottom: 3 }}>Scan to Pay</Text>
+            <Image src={regionalData.upi_qr_code} style={styles.paymentQRCode} />
+          </View>
+        )}
+      </View>
+    );
   };
 
   return (
@@ -511,15 +622,22 @@ const InvoicePDF = ({ invoice, clinicInfo, doctorInfo }: {
           </View>
         )}
 
-        {/* Signature */}
-        <View style={styles.signatureContainer}>
-          {doctorInfo.signature ? (
-            <Image src={doctorInfo.signature} style={styles.signatureImage} />
-          ) : (
-            <View style={styles.signatureLine} />
-          )}
-          <Text style={styles.doctorNameSignature}>{doctorInfo.name}</Text>
-          <Text style={styles.doctorQualification}>{doctorInfo.qualification}</Text>
+        {/* Payment Details Box */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+          <View style={{ flex: 1 }}>
+            {renderPaymentDetails()}
+          </View>
+          
+          {/* Signature */}
+          <View style={styles.signatureContainer}>
+            {doctorInfo.signature ? (
+              <Image src={doctorInfo.signature} style={styles.signatureImage} />
+            ) : (
+              <View style={styles.signatureLine} />
+            )}
+            <Text style={styles.doctorNameSignature}>{doctorInfo.name}</Text>
+            <Text style={styles.doctorQualification}>{doctorInfo.qualification}</Text>
+          </View>
         </View>
 
         {/* Footer */}

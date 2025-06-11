@@ -69,6 +69,7 @@ interface Invoice {
   items: InvoiceItem[];
   currency_code: string;
   currency_symbol: string;
+  region_id?: string;
 }
 
 interface Region {
@@ -346,7 +347,8 @@ const Invoices = () => {
         total_amount: totalAmount,
         notes,
         currency_code: selectedRegion.currency_code,
-        currency_symbol: selectedRegion.currency_symbol
+        currency_symbol: selectedRegion.currency_symbol,
+        region_id: selectedRegion.id
       };
 
       const { data: invoiceResult, error: invoiceError } = await supabase
@@ -391,6 +393,11 @@ const Invoices = () => {
       return;
     }
 
+    if (!selectedRegion) {
+      toast.error('Please select a region');
+      return;
+    }
+
     try {
       // Calculate tax and discount amounts
       let taxAmount = 0;
@@ -421,6 +428,9 @@ const Invoices = () => {
         discount_amount: discountAmount,
         total_amount: totalAmount,
         notes,
+        currency_code: selectedRegion.currency_code,
+        currency_symbol: selectedRegion.currency_symbol,
+        region_id: selectedRegion.id
       };
 
       const { error: invoiceError } = await supabase
@@ -498,7 +508,7 @@ const Invoices = () => {
     setIsDialogOpen(true);
   };
 
-  const openEditDialog = (invoice: Invoice) => {
+  const openEditDialog = async (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setSelectedPatientId(invoice.patient_id);
     setInvoiceDate(invoice.invoice_date);
@@ -510,6 +520,26 @@ const Invoices = () => {
     setTax(invoice.tax_rate);
     setDiscount(invoice.discount_amount);
     setTotal(invoice.total_amount);
+    
+    // Set the selected region based on the invoice's region_id
+    if (invoice.region_id) {
+      try {
+        const { data: regionData, error } = await supabase
+          .from('regions')
+          .select('*')
+          .eq('id', invoice.region_id)
+          .single();
+        
+        if (error) throw error;
+        
+        if (regionData) {
+          setSelectedRegion(regionData);
+        }
+      } catch (error) {
+        console.error('Error fetching region data:', error);
+      }
+    }
+    
     setIsDialogOpen(true);
   };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabase";
 import Layout from "@/components/Layout";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import RegionalSettings, { RegionalSettingsRef } from "@/components/RegionalSettings";
 
 // Define interfaces for type safety
 interface Region {
@@ -61,6 +62,9 @@ const Settings = () => {
   const [regions, setRegions] = useState<Region[]>([]);
   const [selectedRegionId, setSelectedRegionId] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
+  
+  // Reference to the RegionalSettings component
+  const regionalSettingsRef = useRef<RegionalSettingsRef>(null);
   
   const [loading, setLoading] = useState({
     profile: false,
@@ -406,7 +410,7 @@ const Settings = () => {
     }
   };
   
-  // Save region data
+  // Save region data and financial settings together
   const saveRegionData = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(prev => ({ ...prev, region: true }));
@@ -421,20 +425,54 @@ const Settings = () => {
         return;
       }
       
-      // Save to Supabase user_regions table
-      const { error } = await supabase
+      // First check if a record exists
+      const { data: existingRecord, error: fetchError } = await supabase
         .from('user_regions')
-        .upsert({
-          user_id: user?.id,
-          region_id: selectedRegionId,
-          updated_at: new Date().toISOString(),
-        });
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+      
+      let error;
+      
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // Real error, not just "no rows returned"
+        throw fetchError;
+      }
+      
+      if (existingRecord) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('user_regions')
+          .update({
+            region_id: selectedRegionId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user?.id);
+          
+        error = updateError;
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('user_regions')
+          .insert({
+            user_id: user?.id,
+            region_id: selectedRegionId,
+            updated_at: new Date().toISOString(),
+          });
+          
+        error = insertError;
+      }
       
       if (error) throw error;
       
+      // Save regional financial settings if available
+      if (regionalSettingsRef.current) {
+        await regionalSettingsRef.current.saveRegionalData();
+      }
+      
       toast({
         title: "Region settings updated",
-        description: "Your region and currency settings have been saved successfully.",
+        description: "Your region, currency, and financial settings have been saved successfully.",
       });
     } catch (error) {
       toast({
@@ -844,10 +882,26 @@ const Settings = () => {
                         </p>
                       </div>
                     )}
+                    
+                    {/* Region-specific financial settings */}
+                    {selectedRegionId && user && (
+                      <div className="mt-8 border-t pt-6">
+                        <RegionalSettings 
+                          userId={user.id} 
+                          regionId={selectedRegionId} 
+                          region={selectedRegion}
+                          ref={regionalSettingsRef}
+                        />
+                      </div>
+                    )}
                   </CardContent>
                   <CardFooter>
-                    <Button type="submit" disabled={loading.region || !selectedRegionId}>
-                      {loading.region ? "Saving..." : "Save Changes"}
+                    <Button 
+                      type="submit" 
+                      disabled={loading.region || !selectedRegionId}
+                      className="w-full"
+                    >
+                      {loading.region ? "Saving..." : "Save All Settings"}
                     </Button>
                   </CardFooter>
                 </form>
@@ -860,4 +914,4 @@ const Settings = () => {
   );
 };
 
-export default Settings; 
+export default Settings;  

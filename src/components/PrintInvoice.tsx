@@ -6,6 +6,7 @@ import InvoicePDF from './InvoicePDF';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, Download, Printer } from 'lucide-react';
+import { RegionalData } from './RegionalSettings';
 
 interface InvoiceItem {
   id?: string;
@@ -36,6 +37,7 @@ interface Invoice {
   items: InvoiceItem[];
   currency_code: string;
   currency_symbol: string;
+  region_id?: string;
 }
 
 interface ClinicInfo {
@@ -76,12 +78,38 @@ const PrintInvoice = ({ invoice, isOpen, onClose }: PrintInvoiceProps) => {
     specialization: '',
     registrationNumber: '',
   });
+  const [regionalData, setRegionalData] = useState<RegionalData | undefined>(undefined);
 
   useEffect(() => {
     if (isOpen && user) {
       fetchClinicAndDoctorInfo();
+      if (invoice.region_id) {
+        fetchRegionalData(invoice.region_id);
+      }
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, invoice.region_id]);
+
+  const fetchRegionalData = async (regionId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('regional_settings')
+        .select('*')
+        .eq('user_id', user?.id)
+        .eq('region_id', regionId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching regional data:', error);
+        return;
+      }
+      
+      if (data) {
+        setRegionalData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching regional data:', error);
+    }
+  };
 
   const fetchClinicAndDoctorInfo = async () => {
     try {
@@ -146,7 +174,7 @@ const PrintInvoice = ({ invoice, isOpen, onClose }: PrintInvoiceProps) => {
             <h2 className="text-xl font-bold">Invoice Preview</h2>
             <div className="flex space-x-2">
               <PDFDownloadLink
-                document={<InvoicePDF invoice={invoice} clinicInfo={clinicInfo} doctorInfo={doctorInfo} />}
+                document={<InvoicePDF invoice={invoice} clinicInfo={clinicInfo} doctorInfo={doctorInfo} regionalData={regionalData} />}
                 fileName={`invoice-${invoice.id}.pdf`}
                 className="inline-flex"
               >
@@ -180,7 +208,7 @@ const PrintInvoice = ({ invoice, isOpen, onClose }: PrintInvoiceProps) => {
         ) : (
           <div className="p-4">
             <PDFViewer width="100%" height="600px" className="border">
-              <InvoicePDF invoice={invoice} clinicInfo={clinicInfo} doctorInfo={doctorInfo} />
+              <InvoicePDF invoice={invoice} clinicInfo={clinicInfo} doctorInfo={doctorInfo} regionalData={regionalData} />
             </PDFViewer>
           </div>
         )}
