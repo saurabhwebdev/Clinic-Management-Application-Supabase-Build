@@ -43,7 +43,8 @@ import {
   Filter,
   ChevronDown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -56,6 +57,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Define interfaces
 interface Appointment {
@@ -117,6 +120,8 @@ const Appointments = () => {
     status: 'scheduled',
     notes: '',
   });
+
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fetch appointments and patients on component mount
   useEffect(() => {
@@ -587,6 +592,138 @@ const Appointments = () => {
     }
   };
 
+  // Generate appointment slip PDF
+  const generateAppointmentSlip = async (appointment: Appointment) => {
+    try {
+      setIsExporting(true);
+      
+      // Fetch clinic information
+      const { data: clinicData, error: clinicError } = await supabase
+        .from('clinics')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+      
+      if (clinicError && clinicError.code !== 'PGRST116') {
+        console.error('Error fetching clinic data:', clinicError);
+      }
+      
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Appointment Slip', 105, 15, { align: 'center' });
+      
+      // Add clinic details if available
+      if (clinicData) {
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(clinicData.name || 'Clinic', 105, 25, { align: 'center' });
+        
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        let y = 30;
+        const lineHeight = 4;
+        
+        if (clinicData.address) {
+          const addressLines = clinicData.address.split('\n');
+          addressLines.forEach(line => {
+            doc.text(line.trim(), 105, y, { align: 'center' });
+            y += lineHeight;
+          });
+        }
+        
+        if (clinicData.phone) {
+          doc.text(`Phone: ${clinicData.phone}`, 105, y, { align: 'center' });
+          y += lineHeight;
+        }
+        
+        if (clinicData.email) {
+          doc.text(`Email: ${clinicData.email}`, 105, y, { align: 'center' });
+          y += lineHeight;
+        }
+        
+        // Add opening hours if available
+        if (clinicData.opening_hours) {
+          doc.text(`Hours: ${clinicData.opening_hours}`, 105, y, { align: 'center' });
+          y += lineHeight;
+        }
+        
+        // Add divider
+        doc.setDrawColor(200, 200, 200);
+        doc.line(14, y + 2, 196, y + 2);
+        y += 8;
+      } else {
+        // Add date without clinic info
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 105, 22, { align: 'center' });
+        
+        // Add divider
+        doc.setDrawColor(200, 200, 200);
+        doc.line(14, 25, 196, 25);
+        
+        // Set y position for next content
+        const y = 35;
+      }
+      
+      // Add generated date
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 196, 10, { align: 'right' });
+      
+      // Add appointment details
+      const startY = clinicData ? 50 : 35;
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Appointment Details', 14, startY);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      
+      // Create appointment details table
+      autoTable(doc, {
+        startY: startY + 5,
+        head: [['Field', 'Details']],
+        body: [
+          ['Patient Name', `${appointment.patient.first_name} ${appointment.patient.last_name}`],
+          ['Appointment Title', appointment.title],
+          ['Date', formatAppointmentDate(appointment.date)],
+          ['Time', `${formatTime(appointment.start_time)} - ${formatTime(appointment.end_time)}`],
+          ['Status', appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)],
+          ['Contact', appointment.patient.phone || appointment.patient.email || 'No contact info'],
+          ['Notes', appointment.notes || 'No notes']
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246] }
+      });
+      
+      // Add footer with instructions
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9);
+      doc.text('Please arrive 10 minutes before your scheduled appointment time.', 105, 240, { align: 'center' });
+      doc.text('Bring this slip with you to your appointment.', 105, 245, { align: 'center' });
+      
+      // Save PDF
+      doc.save(`appointment-${appointment.id}.pdf`);
+      
+      toast({
+        title: 'Success',
+        description: 'Appointment slip generated successfully',
+      });
+    } catch (error) {
+      console.error('Error generating appointment slip:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate appointment slip. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-8">
@@ -866,6 +1003,20 @@ const Appointments = () => {
                                 title="Delete appointment"
                               >
                                 <Trash2 size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => generateAppointmentSlip(appointment)}
+                                className="h-8 w-8 text-blue-600 hover:text-blue-600 hover:bg-blue-50"
+                                title="Export appointment slip"
+                                disabled={isExporting}
+                              >
+                                {isExporting ? (
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                                ) : (
+                                  <FileText size={16} />
+                                )}
                               </Button>
                             </div>
                           </TableCell>
