@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { format, addDays, isBefore, isAfter, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2, Clock, Video } from 'lucide-react';
+import { CalendarIcon, Loader2, Clock, Video, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Clinic {
   id: string;
@@ -45,6 +46,11 @@ const PublicBooking = () => {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   
+  // Captcha state
+  const [captchaValues, setCaptchaValues] = useState({ num1: 0, num2: 0 });
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [captchaError, setCaptchaError] = useState(false);
+  
   // Form state
   const [formData, setFormData] = useState({
     firstName: '',
@@ -54,6 +60,20 @@ const PublicBooking = () => {
     reason: '',
     isVirtual: false,
   });
+
+  // Generate captcha on component mount
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
+
+  // Generate a simple math captcha
+  const generateCaptcha = () => {
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    setCaptchaValues({ num1, num2 });
+    setCaptchaAnswer('');
+    setCaptchaError(false);
+  };
 
   // Fetch clinic data on component mount
   useEffect(() => {
@@ -177,8 +197,22 @@ const PublicBooking = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleCaptchaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCaptchaAnswer(e.target.value);
+    setCaptchaError(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate captcha
+    const expectedAnswer = captchaValues.num1 + captchaValues.num2;
+    if (parseInt(captchaAnswer) !== expectedAnswer) {
+      setCaptchaError(true);
+      generateCaptcha(); // Generate a new captcha
+      return;
+    }
+    
     setSubmitting(true);
     
     try {
@@ -514,13 +548,57 @@ const PublicBooking = () => {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Captcha verification */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <h3 className="font-medium">Verification</h3>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="captcha">
+                        Please solve this simple math problem: {captchaValues.num1} + {captchaValues.num2} = ?
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="captcha"
+                          type="number"
+                          value={captchaAnswer}
+                          onChange={handleCaptchaChange}
+                          className="max-w-[120px]"
+                          required
+                        />
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={generateCaptcha}
+                          className="text-xs"
+                        >
+                          New Problem
+                        </Button>
+                      </div>
+                      
+                      {captchaError && (
+                        <Alert variant="destructive" className="py-2 mt-2">
+                          <AlertDescription>
+                            Incorrect answer. Please try again with the new problem.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      <p className="text-xs text-muted-foreground">
+                        This helps us prevent automated spam submissions
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
                 
                 <CardFooter>
                   <Button 
                     type="submit" 
                     className="w-full" 
-                    disabled={submitting || !date || !selectedTimeSlot}
+                    disabled={submitting || !date || !selectedTimeSlot || !captchaAnswer}
                   >
                     {submitting ? (
                       <>
