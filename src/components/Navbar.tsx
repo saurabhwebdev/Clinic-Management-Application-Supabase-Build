@@ -147,19 +147,6 @@ const Navbar = () => {
                     {user.email}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center">
-                      <User size={16} className="mr-2" />
-                      <span>My Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings" className="flex items-center">
-                      <Settings size={16} className="mr-2" />
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-red-500 focus:text-red-500">
                     <LogOut size={16} className="mr-2" />
                     <span>Sign Out</span>
