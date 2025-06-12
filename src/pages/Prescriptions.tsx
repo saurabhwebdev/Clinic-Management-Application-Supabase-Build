@@ -411,10 +411,13 @@ const Prescriptions = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Prescriptions</h1>
-          <Button className="flex items-center gap-2" onClick={openCreateDialog}>
+      <div className="container mx-auto py-4 px-4 sm:px-6 sm:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">Prescriptions</h1>
+          <Button 
+            className="flex items-center gap-2 w-full sm:w-auto" 
+            onClick={openCreateDialog}
+          >
             <FilePlus size={16} />
             <span>New Prescription</span>
           </Button>
@@ -422,15 +425,15 @@ const Prescriptions = () => {
 
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <CardTitle>Prescription Records</CardTitle>
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search prescriptions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 w-[240px]"
+                  className="pl-8 w-full sm:w-[240px]"
                 />
               </div>
             </div>
@@ -450,7 +453,8 @@ const Prescriptions = () => {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                {/* Desktop view - Table */}
+                <div className="hidden sm:block overflow-x-auto">
                   <Table className="border-collapse w-full">
                     <TableHeader>
                       <TableRow className="bg-muted/50">
@@ -503,12 +507,73 @@ const Prescriptions = () => {
                   </Table>
                 </div>
                 
+                {/* Mobile view - Cards */}
+                <div className="sm:hidden">
+                  <div className="space-y-3 py-2 px-3">
+                    {currentItems.map((prescription) => (
+                      <div key={prescription.id} className="border rounded-lg p-3 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="font-medium">
+                              {prescription.patient.first_name} {prescription.patient.last_name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatDate(prescription.prescription_date)}
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <PrintPrescription prescription={prescription} />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditDialog(prescription)}
+                              className="h-7 w-7"
+                              title="Edit prescription"
+                            >
+                              <Pencil size={14} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openDeleteDialog(prescription)}
+                              className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              title="Delete prescription"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {prescription.diagnosis && (
+                          <div className="mb-2">
+                            <div className="text-sm font-medium">Diagnosis:</div>
+                            <div className="text-sm">{prescription.diagnosis}</div>
+                          </div>
+                        )}
+                        
+                        <div className="mb-1">
+                          <div className="text-sm font-medium">Medications:</div>
+                          <div className="text-sm">
+                            {prescription.items.length > 0
+                              ? prescription.items.map((item, idx) => (
+                                  <div key={idx} className="text-sm">
+                                    {item.medication_name} {item.dosage && `(${item.dosage})`}
+                                  </div>
+                                ))
+                              : '-'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
                 {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-4 border-t">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t gap-4">
+                  <div className="text-sm text-muted-foreground order-2 sm:order-1">
                     Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredPrescriptions.length)} of {filteredPrescriptions.length} prescriptions
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 order-1 sm:order-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -563,7 +628,7 @@ const Prescriptions = () => {
 
       {/* Create/Edit Prescription Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedPrescription ? 'Edit Prescription' : 'New Prescription'}
@@ -571,7 +636,7 @@ const Prescriptions = () => {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="patient">Patient</Label>
                 <Select
@@ -645,14 +710,14 @@ const Prescriptions = () => {
             </div>
 
             <div className="mt-4">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                 <h3 className="font-medium">Medications</h3>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={handleAddPrescriptionItem}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 w-full sm:w-auto"
                 >
                   <PlusCircle size={14} />
                   <span>Add Medication</span>
@@ -660,8 +725,8 @@ const Prescriptions = () => {
               </div>
 
               {prescriptionItems.map((item, index) => (
-                <div key={index} className="border rounded-md p-4 mb-4">
-                  <div className="flex justify-between items-center mb-2">
+                <div key={index} className="border rounded-md p-3 sm:p-4 mb-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                     <h4 className="font-medium">Medication #{index + 1}</h4>
                     {prescriptionItems.length > 1 && (
                       <Button
@@ -676,7 +741,7 @@ const Prescriptions = () => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
                     <div>
                       <Label htmlFor={`medication-${index}`}>Medication Name</Label>
                       <Input
@@ -701,7 +766,7 @@ const Prescriptions = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
                     <div>
                       <Label htmlFor={`frequency-${index}`}>Frequency</Label>
                       <Input
@@ -742,12 +807,17 @@ const Prescriptions = () => {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
             <Button
               onClick={selectedPrescription ? handleUpdatePrescription : handleCreatePrescription}
+              className="w-full sm:w-auto"
             >
               {selectedPrescription ? 'Update' : 'Create'} Prescription
             </Button>
@@ -757,18 +827,26 @@ const Prescriptions = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Prescription</DialogTitle>
           </DialogHeader>
           <p>
             Are you sure you want to delete this prescription? This action cannot be undone.
           </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeletePrescription}>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeletePrescription}
+              className="w-full sm:w-auto"
+            >
               Delete
             </Button>
           </DialogFooter>
