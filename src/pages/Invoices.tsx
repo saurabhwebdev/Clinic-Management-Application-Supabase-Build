@@ -619,10 +619,13 @@ const Invoices = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-6 max-w-7xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Invoices</h1>
-          <Button className="flex items-center gap-2" onClick={openCreateDialog}>
+      <div className="container mx-auto py-4 px-4 sm:px-6 sm:py-8 max-w-7xl">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">Invoices</h1>
+          <Button 
+            className="flex items-center gap-2 w-full sm:w-auto" 
+            onClick={openCreateDialog}
+          >
             <FilePlus size={16} />
             <span>New Invoice</span>
           </Button>
@@ -630,15 +633,15 @@ const Invoices = () => {
 
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <CardTitle>Invoice Records</CardTitle>
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search invoices..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 w-[240px]"
+                  className="pl-8 w-full sm:w-[240px]"
                 />
               </div>
             </div>
@@ -660,7 +663,8 @@ const Invoices = () => {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                {/* Desktop view - Table */}
+                <div className="hidden sm:block overflow-x-auto">
                   <Table className="border-collapse w-full">
                     <TableHeader>
                       <TableRow className="bg-muted/50">
@@ -729,12 +733,82 @@ const Invoices = () => {
                   </Table>
                 </div>
                 
+                {/* Mobile view - Cards */}
+                <div className="sm:hidden">
+                  <div className="space-y-3 py-2 px-3">
+                    {currentItems.map((invoice) => (
+                      <div key={invoice.id} className="border rounded-lg p-3 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="font-medium">
+                              {invoice.patient.first_name} {invoice.patient.last_name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatDate(invoice.invoice_date)}
+                            </div>
+                          </div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                            invoice.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm mb-3">
+                          <div className="text-muted-foreground">Due Date:</div>
+                          <div>{formatDate(invoice.due_date)}</div>
+                          
+                          <div className="text-muted-foreground">Total:</div>
+                          <div className="font-medium">
+                            {formatCurrency(invoice.total_amount, invoice.currency_symbol, invoice.currency_code)}
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-end gap-1 mt-3 border-t pt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openPrintDialog(invoice)}
+                            className="h-8"
+                            title="Print invoice"
+                          >
+                            <FilePlus size={14} className="mr-1" />
+                            <span>Print</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(invoice)}
+                            className="h-8"
+                            title="Edit invoice"
+                          >
+                            <Pencil size={14} className="mr-1" />
+                            <span>Edit</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDeleteDialog(invoice)}
+                            className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Delete invoice"
+                          >
+                            <Trash2 size={14} className="mr-1" />
+                            <span>Delete</span>
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
                 {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-4 border-t">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t gap-4">
+                  <div className="text-sm text-muted-foreground order-2 sm:order-1">
                     Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredInvoices.length)} of {filteredInvoices.length} invoices
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 order-1 sm:order-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -788,7 +862,7 @@ const Invoices = () => {
 
         {/* Create/Edit Invoice Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {selectedInvoice ? 'Edit Invoice' : 'New Invoice'}
@@ -796,7 +870,7 @@ const Invoices = () => {
             </DialogHeader>
 
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="patient">Patient</Label>
                   <Select
@@ -832,7 +906,7 @@ const Invoices = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="invoiceDate">Invoice Date</Label>
                   <Input
@@ -866,14 +940,14 @@ const Invoices = () => {
               </div>
 
               <div className="mt-4">
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                   <h3 className="font-medium">Invoice Items</h3>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={handleAddInvoiceItem}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 w-full sm:w-auto"
                   >
                     <PlusCircle size={14} />
                     <span>Add Item</span>
@@ -881,8 +955,8 @@ const Invoices = () => {
                 </div>
 
                 {invoiceItems.map((item, index) => (
-                  <div key={index} className="border rounded-md p-4 mb-4">
-                    <div className="flex justify-between items-center mb-2">
+                  <div key={index} className="border rounded-md p-3 sm:p-4 mb-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                       <h4 className="font-medium">Item #{index + 1}</h4>
                       {invoiceItems.length > 1 && (
                         <Button
@@ -890,7 +964,7 @@ const Invoices = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleRemoveInvoiceItem(index)}
-                          className="flex items-center gap-1 text-destructive hover:bg-destructive/10"
+                          className="flex items-center gap-1 text-destructive hover:bg-destructive/10 w-full sm:w-auto justify-center sm:justify-start"
                         >
                           <Trash2 size={14} />
                           <span>Remove</span>
@@ -909,7 +983,7 @@ const Invoices = () => {
                         />
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <Label htmlFor={`item-${index}-quantity`}>Quantity</Label>
                           <Input
@@ -955,11 +1029,11 @@ const Invoices = () => {
                     <span>{selectedRegion ? formatCurrency(subtotal, selectedRegion.currency_symbol, selectedRegion.currency_code) : formatCurrency(subtotal)}</span>
                   </div>
                   
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <span className="font-medium">Tax:</span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                       <Select value={taxType} onValueChange={(value) => setTaxType(value as 'percentage' | 'fixed')}>
-                        <SelectTrigger className="w-[110px]">
+                        <SelectTrigger className="w-full sm:w-[110px]">
                           <SelectValue placeholder="Type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -967,23 +1041,25 @@ const Invoices = () => {
                           <SelectItem value="fixed">Fixed</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Input
-                        type="number"
-                        value={tax}
-                        onChange={(e) => setTax(parseFloat(e.target.value) || 0)}
-                        min="0"
-                        step="0.01"
-                        className="w-24 text-right"
-                      />
-                      {taxType === 'percentage' && <span>%</span>}
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <Input
+                          type="number"
+                          value={tax}
+                          onChange={(e) => setTax(parseFloat(e.target.value) || 0)}
+                          min="0"
+                          step="0.01"
+                          className="w-full sm:w-24 text-right"
+                        />
+                        {taxType === 'percentage' && <span>%</span>}
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <span className="font-medium">Discount:</span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                       <Select value={discountType} onValueChange={(value) => setDiscountType(value as 'percentage' | 'fixed')}>
-                        <SelectTrigger className="w-[110px]">
+                        <SelectTrigger className="w-full sm:w-[110px]">
                           <SelectValue placeholder="Type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -991,15 +1067,17 @@ const Invoices = () => {
                           <SelectItem value="fixed">Fixed</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Input
-                        type="number"
-                        value={discount}
-                        onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                        min="0"
-                        step="0.01"
-                        className="w-24 text-right"
-                      />
-                      {discountType === 'percentage' && <span>%</span>}
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <Input
+                          type="number"
+                          value={discount}
+                          onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                          min="0"
+                          step="0.01"
+                          className="w-full sm:w-24 text-right"
+                        />
+                        {discountType === 'percentage' && <span>%</span>}
+                      </div>
                     </div>
                   </div>
                   
@@ -1012,11 +1090,18 @@ const Invoices = () => {
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDialogOpen(false)}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
-              <Button onClick={selectedInvoice ? handleUpdateInvoice : handleCreateInvoice}>
+              <Button 
+                onClick={selectedInvoice ? handleUpdateInvoice : handleCreateInvoice}
+                className="w-full sm:w-auto"
+              >
                 {selectedInvoice ? 'Update Invoice' : 'Create Invoice'}
               </Button>
             </DialogFooter>
@@ -1025,7 +1110,7 @@ const Invoices = () => {
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Delete Invoice</DialogTitle>
             </DialogHeader>
@@ -1034,11 +1119,19 @@ const Invoices = () => {
                 Are you sure you want to delete this invoice? This action cannot be undone.
               </p>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDeleteDialogOpen(false)}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleDeleteInvoice}>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteInvoice}
+                className="w-full sm:w-auto"
+              >
                 Delete
               </Button>
             </DialogFooter>
