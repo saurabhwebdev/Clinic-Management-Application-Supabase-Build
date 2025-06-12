@@ -2,8 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
+import { useAuth } from '@/lib/AuthContext';
 
 const Index = () => {
+  const { user } = useAuth();
+  
   return (
     <Layout>
       {/* Hero Section */}
@@ -21,16 +24,26 @@ const Index = () => {
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link to="/signup">
-                    <Button className="px-8 py-3 bg-black text-white font-medium rounded-md hover:bg-gray-800 transition-colors">
-                      Get Started
-                    </Button>
-                  </Link>
-                  <Link to="/contact">
-                    <Button variant="outline" className="px-8 py-3 border border-black text-black font-medium rounded-md hover:bg-gray-100 transition-colors">
-                      Book a Demo
-                    </Button>
-                  </Link>
+                  {user ? (
+                    <Link to="/dashboard">
+                      <Button className="px-8 py-3 bg-black text-white font-medium rounded-md hover:bg-gray-800 transition-colors">
+                        Go to Dashboard
+                      </Button>
+                    </Link>
+                  ) : (
+                    <>
+                      <Link to="/signup">
+                        <Button className="px-8 py-3 bg-black text-white font-medium rounded-md hover:bg-gray-800 transition-colors">
+                          Get Started
+                        </Button>
+                      </Link>
+                      <Link to="/contact">
+                        <Button variant="outline" className="px-8 py-3 border border-black text-black font-medium rounded-md hover:bg-gray-100 transition-colors">
+                          Book a Demo
+                        </Button>
+                      </Link>
+                    </>
+                  )}
                 </div>
                 <div className="pt-4">
                   <p className="text-sm text-gray-500">
