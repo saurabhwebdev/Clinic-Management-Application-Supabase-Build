@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PatientHelp, AppointmentHelp, GettingStartedHelp, PrescriptionHelp, InvoiceHelp } from '@/components/help';
+import { PatientHelp, AppointmentHelp, GettingStartedHelp, PrescriptionHelp, InvoiceHelp, SettingsHelp } from '@/components/help';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 
@@ -73,6 +73,14 @@ const Help = () => {
                     <ChevronRight className="ml-auto h-4 w-4" />
                   </Button>
                   <Button 
+                    variant={activeTab === "settings" ? "secondary" : "ghost"} 
+                    className="justify-start" 
+                    onClick={() => setActiveTab("settings")}
+                  >
+                    Settings
+                    <ChevronRight className="ml-auto h-4 w-4" />
+                  </Button>
+                  <Button 
                     variant={activeTab === "contact" ? "secondary" : "ghost"} 
                     className="justify-start" 
                     onClick={() => setActiveTab("contact")}
@@ -130,6 +138,13 @@ const Help = () => {
                       <h4 className="font-medium text-lg mb-2">Billing & Invoices</h4>
                       <p className="text-sm text-gray-600">Learn how to create and manage invoices for your patients.</p>
                     </div>
+                    <div 
+                      className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
+                      onClick={() => setActiveTab("settings")}
+                    >
+                      <h4 className="font-medium text-lg mb-2">Settings</h4>
+                      <p className="text-sm text-gray-600">Learn how to configure your clinic profile and system preferences.</p>
+                    </div>
                   </div>
                   
                   <h3 className="text-xl font-semibold mt-8 mb-3">Need More Help?</h3>
@@ -151,6 +166,7 @@ const Help = () => {
               {activeTab === "appointments" && <AppointmentHelp />}
               {activeTab === "prescriptions" && <PrescriptionHelp />}
               {activeTab === "billing" && <InvoiceHelp />}
+              {activeTab === "settings" && <SettingsHelp />}
               
               {activeTab === "contact" && (
                 <div className="prose max-w-none">
