@@ -524,58 +524,50 @@ const Patients = () => {
               <>
                 {/* Desktop view - Table */}
                 <div className="hidden sm:block overflow-x-auto">
-                  <Table className="border-collapse w-full">
+                  <Table className="border-collapse w-full border border-gray-200">
                     <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="h-9 px-2 text-xs font-medium">Name</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium">DOB</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium">Gender</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium">Contact</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium w-[100px] text-center">Actions</TableHead>
+                      <TableRow className="bg-gray-50 border-b border-gray-200">
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">Name</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">DOB</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">Gender</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">Phone</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">Email</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 w-[60px] text-center">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {currentItems.map((patient) => (
-                        <TableRow key={patient.id} className="hover:bg-muted/50 border-b border-border/50">
-                          <TableCell className="p-2 text-sm">
+                        <TableRow key={patient.id} className="hover:bg-gray-50 border-b border-gray-200">
+                          <TableCell className="p-1 px-2 text-sm border-r border-gray-200">
                             <Link to={`/patients/${patient.id}`} className="hover:underline font-medium">
                               {patient.first_name} {patient.last_name}
                             </Link>
                           </TableCell>
-                          <TableCell className="p-2 text-sm">{patient.date_of_birth || '-'}</TableCell>
-                          <TableCell className="p-2 text-sm capitalize">{patient.gender || '-'}</TableCell>
-                          <TableCell className="p-2 text-sm">
-                            {patient.phone || patient.email ? (
-                              <>
-                                {patient.phone && <div>{patient.phone}</div>}
-                                {patient.email && <div className="text-xs text-muted-foreground">{patient.email}</div>}
-                              </>
-                            ) : (
-                              '-'
-                            )}
+                          <TableCell className="p-1 px-2 text-sm border-r border-gray-200">{patient.date_of_birth || '-'}</TableCell>
+                          <TableCell className="p-1 px-2 text-sm capitalize border-r border-gray-200">{patient.gender || '-'}</TableCell>
+                          <TableCell className="p-1 px-2 text-sm border-r border-gray-200">
+                            {patient.phone || '-'}
                           </TableCell>
-                          <TableCell className="p-2 text-sm">
-                            <div className="flex justify-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openEditDialog(patient)}
-                                className="h-8 w-8"
-                                title="Edit patient"
-                              >
-                                <Pencil size={16} />
-                              </Button>
+                          <TableCell className="p-1 px-2 text-sm border-r border-gray-200">
+                            {patient.email || '-'}
+                          </TableCell>
+                          <TableCell className="p-1 px-2 text-sm text-center">
+                            <div className="flex justify-center">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8"
+                                    className="h-7 w-7"
                                   >
-                                    <MoreVertical size={16} />
+                                    <MoreVertical size={14} />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
+                                <DropdownMenuContent align="end" className="w-[160px]">
+                                  <DropdownMenuItem onClick={() => openEditDialog(patient)}>
+                                    <Pencil size={16} className="mr-2" />
+                                    Edit Patient
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem asChild>
                                     <div className="w-full cursor-pointer">
                                       <PatientExport 
@@ -588,7 +580,7 @@ const Patients = () => {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem 
                                     onClick={() => handleDeletePatient(patient.id)}
-                                    className="text-destructive focus:text-destructive"
+                                    className="text-red-600"
                                   >
                                     <Trash2 size={16} className="mr-2" />
                                     Delete Patient
