@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PatientHelp, AppointmentHelp, GettingStartedHelp, PrescriptionHelp } from '@/components/help';
+import { PatientHelp, AppointmentHelp, GettingStartedHelp, PrescriptionHelp, InvoiceHelp } from '@/components/help';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 
@@ -123,6 +123,13 @@ const Help = () => {
                       <h4 className="font-medium text-lg mb-2">Prescriptions</h4>
                       <p className="text-sm text-gray-600">Learn how to create and manage digital prescriptions.</p>
                     </div>
+                    <div 
+                      className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
+                      onClick={() => setActiveTab("billing")}
+                    >
+                      <h4 className="font-medium text-lg mb-2">Billing & Invoices</h4>
+                      <p className="text-sm text-gray-600">Learn how to create and manage invoices for your patients.</p>
+                    </div>
                   </div>
                   
                   <h3 className="text-xl font-semibold mt-8 mb-3">Need More Help?</h3>
@@ -143,15 +150,7 @@ const Help = () => {
               {activeTab === "patients" && <PatientHelp />}
               {activeTab === "appointments" && <AppointmentHelp />}
               {activeTab === "prescriptions" && <PrescriptionHelp />}
-              
-              {activeTab === "billing" && (
-                <div className="prose max-w-none">
-                  <h2 className="text-2xl font-bold mb-4">Billing & Invoices</h2>
-                  <p className="text-gray-600 mb-6">
-                    This section is currently under development. Please check back later for information on managing billing and invoices.
-                  </p>
-                </div>
-              )}
+              {activeTab === "billing" && <InvoiceHelp />}
               
               {activeTab === "contact" && (
                 <div className="prose max-w-none">
