@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PatientHelp, AppointmentHelp, GettingStartedHelp } from '@/components/help';
+import { PatientHelp, AppointmentHelp, GettingStartedHelp, PrescriptionHelp } from '@/components/help';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 
@@ -54,6 +54,14 @@ const Help = () => {
                     onClick={() => setActiveTab("appointments")}
                   >
                     Appointments
+                    <ChevronRight className="ml-auto h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant={activeTab === "prescriptions" ? "secondary" : "ghost"} 
+                    className="justify-start" 
+                    onClick={() => setActiveTab("prescriptions")}
+                  >
+                    Prescriptions
                     <ChevronRight className="ml-auto h-4 w-4" />
                   </Button>
                   <Button 
@@ -110,10 +118,10 @@ const Help = () => {
                     </div>
                     <div 
                       className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
-                      onClick={() => setActiveTab("billing")}
+                      onClick={() => setActiveTab("prescriptions")}
                     >
-                      <h4 className="font-medium text-lg mb-2">Billing & Invoices</h4>
-                      <p className="text-sm text-gray-600">Learn how to create invoices and manage payments.</p>
+                      <h4 className="font-medium text-lg mb-2">Prescriptions</h4>
+                      <p className="text-sm text-gray-600">Learn how to create and manage digital prescriptions.</p>
                     </div>
                   </div>
                   
@@ -134,6 +142,7 @@ const Help = () => {
               {activeTab === "getting-started" && <GettingStartedHelp />}
               {activeTab === "patients" && <PatientHelp />}
               {activeTab === "appointments" && <AppointmentHelp />}
+              {activeTab === "prescriptions" && <PrescriptionHelp />}
               
               {activeTab === "billing" && (
                 <div className="prose max-w-none">
