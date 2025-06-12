@@ -1,11 +1,19 @@
-import { Resend } from 'resend';
+import emailjs from '@emailjs/browser';
 import { supabase } from './supabase';
+
+interface EmailSettings {
+  enabled: boolean;
+  service_id: string;
+  template_id: string;
+  public_key: string;
+  from_email: string;
+  from_name: string;
+}
 
 interface EmailOptions {
   to: string | string[];
   subject: string;
-  html: string;
-  text?: string;
+  message: string;
   cc?: string | string[];
   bcc?: string | string[];
   replyTo?: string;
@@ -14,7 +22,7 @@ interface EmailOptions {
 /**
  * Get email settings for a specific user
  */
-export const getEmailSettings = async (userId: string) => {
+export const getEmailSettings = async (userId: string): Promise<EmailSettings | null> => {
   try {
     const { data, error } = await supabase
       .from('email_settings')
@@ -32,37 +40,46 @@ export const getEmailSettings = async (userId: string) => {
 };
 
 /**
- * Send an email using Resend
+ * Send an email using EmailJS
  */
 export const sendEmail = async (userId: string, options: EmailOptions) => {
   try {
     // Get user's email settings
     const settings = await getEmailSettings(userId);
     
-    if (!settings || !settings.enabled || !settings.resend_api_key) {
+    if (!settings || !settings.enabled || !settings.service_id || !settings.template_id || !settings.public_key) {
       throw new Error('Email settings not configured or disabled');
     }
     
-    // Initialize Resend with the user's API key
-    const resend = new Resend(settings.resend_api_key);
+    // Initialize EmailJS with the user's public key
+    emailjs.init(settings.public_key);
+    
+    // Format recipients if array
+    const toEmails = Array.isArray(options.to) ? options.to.join(', ') : options.to;
+    const ccEmails = options.cc ? (Array.isArray(options.cc) ? options.cc.join(', ') : options.cc) : '';
+    const bccEmails = options.bcc ? (Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc) : '';
+    
+    // Prepare template parameters
+    const templateParams = {
+      to_email: toEmails,
+      to_name: '',
+      from_name: settings.from_name || 'ClinicFlow',
+      from_email: settings.from_email,
+      subject: options.subject,
+      message: options.message,
+      cc: ccEmails,
+      bcc: bccEmails,
+      reply_to: options.replyTo || settings.from_email
+    };
     
     // Send the email
-    const { data, error } = await resend.emails.send({
-      from: settings.from_name 
-        ? `${settings.from_name} <${settings.from_email}>` 
-        : settings.from_email,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.text,
-      cc: options.cc,
-      bcc: options.bcc,
-      replyTo: options.replyTo,
-    });
+    const response = await emailjs.send(
+      settings.service_id,
+      settings.template_id,
+      templateParams
+    );
     
-    if (error) throw error;
-    
-    return { success: true, data };
+    return { success: true, data: response };
   } catch (error) {
     console.error('Error sending email:', error);
     return { success: false, error };
@@ -73,41 +90,36 @@ export const sendEmail = async (userId: string, options: EmailOptions) => {
  * Send a test email
  */
 export const sendTestEmail = async (
-  apiKey: string, 
+  serviceId: string, 
+  templateId: string,
+  publicKey: string,
   fromEmail: string, 
   fromName: string | undefined, 
   toEmail: string
 ) => {
   try {
-    // Initialize Resend with the provided API key
-    const resend = new Resend(apiKey);
+    // Initialize EmailJS with the provided public key
+    emailjs.init(publicKey);
     
-    // Format the from field
-    const from = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
+    // Prepare template parameters
+    const templateParams = {
+      to_email: toEmail,
+      to_name: 'Test Recipient',
+      from_name: fromName || 'ClinicFlow',
+      from_email: fromEmail,
+      subject: 'Test Email from ClinicFlow',
+      message: 'This is a test email from ClinicFlow to verify your email configuration. If you received this email, your EmailJS integration is working correctly!',
+      reply_to: fromEmail
+    };
     
     // Send the test email
-    const { data, error } = await resend.emails.send({
-      from,
-      to: toEmail,
-      subject: 'Test Email from ClinicFlow',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #4f46e5;">ClinicFlow Email Test</h2>
-          <p>This is a test email from ClinicFlow to verify your email configuration.</p>
-          <p>If you received this email, your Resend integration is working correctly!</p>
-          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 14px;">
-              This is an automated message from ClinicFlow. Please do not reply to this email.
-            </p>
-          </div>
-        </div>
-      `,
-      text: 'ClinicFlow Email Test\n\nThis is a test email from ClinicFlow to verify your email configuration.\n\nIf you received this email, your Resend integration is working correctly!',
-    });
+    const response = await emailjs.send(
+      serviceId,
+      templateId,
+      templateParams
+    );
     
-    if (error) throw error;
-    
-    return { success: true, data };
+    return { success: true, data: response };
   } catch (error) {
     console.error('Error sending test email:', error);
     return { success: false, error };
@@ -115,25 +127,21 @@ export const sendTestEmail = async (
 };
 
 /**
- * Utility function to create email templates
+ * Utility function to create email content
  */
-export const createEmailTemplate = (options: {
+export const createEmailContent = (options: {
   title: string;
   content: string;
   clinicName?: string;
   footerText?: string;
-}) => {
+}): string => {
   const { title, content, clinicName, footerText } = options;
   
   return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h2 style="color: #4f46e5;">${title}</h2>
-      ${content}
-      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-        <p style="color: #6b7280; font-size: 14px;">
-          ${footerText || `This is an automated message from ${clinicName || 'ClinicFlow'}. Please do not reply to this email.`}
-        </p>
-      </div>
-    </div>
+    <h2>${title}</h2>
+    ${content}
+    <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+      ${footerText || `This is an automated message from ${clinicName || 'ClinicFlow'}. Please do not reply to this email.`}
+    </p>
   `;
 }; 

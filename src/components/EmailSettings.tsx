@@ -6,7 +6,9 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
-import { sendTestEmailApi } from "@/pages/api/send-test-email";
+import { sendTestEmail } from "@/lib/emailService";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export interface EmailSettingsRef {
   saveEmailSettings: () => Promise<boolean>;
@@ -23,7 +25,9 @@ const EmailSettings = forwardRef<EmailSettingsRef, EmailSettingsProps>(({ userId
   
   const [emailSettings, setEmailSettings] = useState({
     enabled: false,
-    resendApiKey: '',
+    serviceId: '',
+    templateId: '',
+    publicKey: '',
     fromEmail: '',
     fromName: '',
     testEmail: ''
@@ -51,7 +55,9 @@ const EmailSettings = forwardRef<EmailSettingsRef, EmailSettingsProps>(({ userId
       if (data) {
         setEmailSettings({
           enabled: data.enabled || false,
-          resendApiKey: data.resend_api_key || '',
+          serviceId: data.service_id || '',
+          templateId: data.template_id || '',
+          publicKey: data.public_key || '',
           fromEmail: data.from_email || '',
           fromName: data.from_name || '',
           testEmail: ''
@@ -77,10 +83,28 @@ const EmailSettings = forwardRef<EmailSettingsRef, EmailSettingsProps>(({ userId
     try {
       // Validate required fields if enabled
       if (emailSettings.enabled) {
-        if (!emailSettings.resendApiKey) {
+        if (!emailSettings.serviceId) {
           toast({
             title: "Error",
-            description: "Resend API key is required when email is enabled.",
+            description: "EmailJS Service ID is required when email is enabled.",
+            variant: "destructive",
+          });
+          return false;
+        }
+        
+        if (!emailSettings.templateId) {
+          toast({
+            title: "Error",
+            description: "EmailJS Template ID is required when email is enabled.",
+            variant: "destructive",
+          });
+          return false;
+        }
+        
+        if (!emailSettings.publicKey) {
+          toast({
+            title: "Error",
+            description: "EmailJS Public Key is required when email is enabled.",
             variant: "destructive",
           });
           return false;
@@ -101,7 +125,9 @@ const EmailSettings = forwardRef<EmailSettingsRef, EmailSettingsProps>(({ userId
         .upsert({
           user_id: userId,
           enabled: emailSettings.enabled,
-          resend_api_key: emailSettings.resendApiKey,
+          service_id: emailSettings.serviceId,
+          template_id: emailSettings.templateId,
+          public_key: emailSettings.publicKey,
           from_email: emailSettings.fromEmail,
           from_name: emailSettings.fromName,
           updated_at: new Date().toISOString(),
@@ -118,7 +144,7 @@ const EmailSettings = forwardRef<EmailSettingsRef, EmailSettingsProps>(({ userId
     }
   };
 
-  const sendTestEmail = async () => {
+  const handleSendTestEmail = async () => {
     if (!emailSettings.testEmail) {
       toast({
         title: "Error",
@@ -128,19 +154,30 @@ const EmailSettings = forwardRef<EmailSettingsRef, EmailSettingsProps>(({ userId
       return;
     }
 
+    if (!emailSettings.serviceId || !emailSettings.templateId || !emailSettings.publicKey) {
+      toast({
+        title: "Error",
+        description: "Please fill in all EmailJS credentials before sending a test email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setTestLoading(true);
     
     try {
       // Call the function to send test email
-      const result = await sendTestEmailApi(
-        emailSettings.resendApiKey,
+      const result = await sendTestEmail(
+        emailSettings.serviceId,
+        emailSettings.templateId,
+        emailSettings.publicKey,
         emailSettings.fromEmail,
         emailSettings.fromName,
         emailSettings.testEmail
       );
       
       if (!result.success) {
-        throw new Error(result.message || 'Failed to send test email');
+        throw new Error(result.error ? String(result.error) : 'Failed to send test email');
       }
       
       toast({
@@ -181,18 +218,55 @@ const EmailSettings = forwardRef<EmailSettingsRef, EmailSettingsProps>(({ userId
         
         {emailSettings.enabled && (
           <div className="space-y-4 pt-4 border-t">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Important</AlertTitle>
+              <AlertDescription>
+                You need to create an account on <a href="https://www.emailjs.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">EmailJS</a>, 
+                set up a service, and create an email template before using this feature.
+              </AlertDescription>
+            </Alert>
+            
             <div className="space-y-2">
-              <Label htmlFor="resendApiKey">Resend API Key</Label>
+              <Label htmlFor="serviceId">EmailJS Service ID</Label>
               <Input
-                id="resendApiKey"
-                name="resendApiKey"
-                type="password"
-                placeholder="Enter your Resend API key"
-                value={emailSettings.resendApiKey}
+                id="serviceId"
+                name="serviceId"
+                placeholder="e.g., service_xxxxxxx"
+                value={emailSettings.serviceId}
                 onChange={handleChange}
               />
               <p className="text-xs text-muted-foreground">
-                Get your API key from <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Resend Dashboard</a>
+                Find your Service ID in the <a href="https://dashboard.emailjs.com/admin/services" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">EmailJS Dashboard</a> under Services
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="templateId">EmailJS Template ID</Label>
+              <Input
+                id="templateId"
+                name="templateId"
+                placeholder="e.g., template_xxxxxxx"
+                value={emailSettings.templateId}
+                onChange={handleChange}
+              />
+              <p className="text-xs text-muted-foreground">
+                Find your Template ID in the <a href="https://dashboard.emailjs.com/admin/templates" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">EmailJS Dashboard</a> under Email Templates
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="publicKey">EmailJS Public Key</Label>
+              <Input
+                id="publicKey"
+                name="publicKey"
+                type="password"
+                placeholder="e.g., XXXXXXXXXXXXXXXXXX"
+                value={emailSettings.publicKey}
+                onChange={handleChange}
+              />
+              <p className="text-xs text-muted-foreground">
+                Find your Public Key in the <a href="https://dashboard.emailjs.com/admin/account" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">EmailJS Dashboard</a> under Account → API Keys
               </p>
             </div>
             
@@ -234,7 +308,7 @@ const EmailSettings = forwardRef<EmailSettingsRef, EmailSettingsProps>(({ userId
                 />
                 <Button 
                   type="button" 
-                  onClick={sendTestEmail}
+                  onClick={handleSendTestEmail}
                   disabled={testLoading}
                   variant="outline"
                 >
