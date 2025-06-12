@@ -373,69 +373,66 @@ const PendingBookings = ({ onRefreshNeeded }: PendingBookingsProps) => {
               <Table className="border">
                 <TableHeader className="bg-muted/50">
                   <TableRow>
-                    <TableHead className="w-[150px]">Name</TableHead>
-                    <TableHead className="w-[180px]">Email</TableHead>
-                    <TableHead className="w-[120px]">Phone</TableHead>
-                    <TableHead className="w-[100px]">Date</TableHead>
-                    <TableHead className="w-[100px]">Time</TableHead>
-                    <TableHead className="w-[150px]">Reason</TableHead>
-                    <TableHead className="w-[100px] text-center">Actions</TableHead>
+                    <TableHead className="w-[150px] text-xs font-medium p-2">Name</TableHead>
+                    <TableHead className="w-[180px] text-xs font-medium p-2">Email</TableHead>
+                    <TableHead className="w-[120px] text-xs font-medium p-2">Phone</TableHead>
+                    <TableHead className="w-[100px] text-xs font-medium p-2">Date</TableHead>
+                    <TableHead className="w-[100px] text-xs font-medium p-2">Time</TableHead>
+                    <TableHead className="w-[150px] text-xs font-medium p-2">Reason</TableHead>
+                    <TableHead className="w-[100px] text-center text-xs font-medium p-2">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {bookingRequests.map((request) => (
                     <TableRow key={request.id} className="hover:bg-muted/30">
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium text-xs p-2 whitespace-nowrap">
                         {request.first_name} {request.last_name}
                       </TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-xs p-2 whitespace-nowrap">
                         {request.email}
                       </TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-xs p-2 whitespace-nowrap">
                         {request.phone}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-xs p-2 whitespace-nowrap">
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-sm">{format(parseISO(request.date), 'MMM d, yyyy')}</span>
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          <span>{format(parseISO(request.date), 'MM/dd/yy')}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-xs p-2 whitespace-nowrap">
                         <div className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-sm">{formatTime(request.start_time)}</span>
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          <span>{formatTime(request.start_time)}</span>
                           {request.is_virtual && (
-                            <Badge variant="outline" className="ml-1 flex items-center gap-1 text-xs">
-                              <Video className="h-3 w-3" />
-                              Virtual
-                            </Badge>
+                            <Video className="h-3 w-3 text-muted-foreground" />
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-start gap-1">
-                          <FileText className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
-                          <span className="line-clamp-1 text-sm">{request.reason || 'Not specified'}</span>
+                      <TableCell className="text-xs p-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
+                        <div className="flex items-center gap-1">
+                          <FileText className="h-3 w-3 text-muted-foreground" />
+                          <span className="truncate">{request.reason || 'Not specified'}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex justify-center gap-2">
+                      <TableCell className="p-1">
+                        <div className="flex justify-center gap-1">
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-7 w-7"
+                            className="h-6 w-6"
                             onClick={() => handleRejectBooking(request.id)}
                             title="Reject"
                           >
-                            <X className="h-3.5 w-3.5 text-destructive" />
+                            <X className="h-3 w-3 text-destructive" />
                           </Button>
                           <Button
                             size="icon"
-                            className="h-7 w-7"
+                            className="h-6 w-6"
                             onClick={() => openConfirmDialog(request)}
                             title="Confirm"
                           >
-                            <Check className="h-3.5 w-3.5" />
+                            <Check className="h-3 w-3" />
                           </Button>
                         </div>
                       </TableCell>
