@@ -26,7 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Pencil, Trash2, Search, Package, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, Search, Package, AlertCircle, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Define inventory item interface
 interface InventoryItem {
@@ -588,12 +594,12 @@ const Inventory = () => {
                       <Table className="border-collapse w-full">
                         <TableHeader>
                           <TableRow className="bg-muted/50 hover:bg-muted/50">
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Name</TableHead>
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Category</TableHead>
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Quantity</TableHead>
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Reorder Level</TableHead>
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Location</TableHead>
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Actions</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-left text-xs">Name</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-left text-xs">Category</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-left text-xs">Quantity</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-left text-xs">Reorder Level</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-left text-xs">Location</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-center text-xs w-10">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -602,32 +608,38 @@ const Inventory = () => {
                               key={item.id} 
                               className="hover:bg-muted/30 transition-colors"
                             >
-                              <TableCell className="font-medium border px-4 py-3">{item.name}</TableCell>
-                              <TableCell className="border px-4 py-3">{item.category || '-'}</TableCell>
-                              <TableCell className={`border px-4 py-3 ${item.quantity <= (item.reorder_level || 0) ? 'text-red-600 font-medium' : ''}`}>
+                              <TableCell className="font-medium border px-1 py-1 text-xs">{item.name}</TableCell>
+                              <TableCell className="border px-1 py-1 text-xs">{item.category || '-'}</TableCell>
+                              <TableCell className={`border px-1 py-1 text-xs ${item.quantity <= (item.reorder_level || 0) ? 'text-red-600 font-medium' : ''}`}>
                                 {item.quantity} {item.unit || ''}
                               </TableCell>
-                              <TableCell className="border px-4 py-3">{item.reorder_level || '-'}</TableCell>
-                              <TableCell className="border px-4 py-3">{item.location || '-'}</TableCell>
-                              <TableCell className="border px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => openEditDialog(item)}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDeleteItem(item.id)}
-                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
+                              <TableCell className="border px-1 py-1 text-xs">{item.reorder_level || '-'}</TableCell>
+                              <TableCell className="border px-1 py-1 text-xs">{item.location || '-'}</TableCell>
+                              <TableCell className="border px-1 py-1 text-center">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <MoreHorizontal className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openEditDialog(item)}>
+                                      <Pencil className="h-3.5 w-3.5 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => handleDeleteItem(item.id)}
+                                      className="text-red-600"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -762,11 +774,12 @@ const Inventory = () => {
                       <Table className="border-collapse w-full">
                         <TableHeader>
                           <TableRow className="bg-muted/50 hover:bg-muted/50">
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Name</TableHead>
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Category</TableHead>
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Quantity</TableHead>
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Reorder Level</TableHead>
-                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Actions</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-left text-xs">Name</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-left text-xs">Category</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-left text-xs">Quantity</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-left text-xs">Reorder Level</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-left text-xs">Location</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-1 py-1 text-center text-xs w-10">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -775,20 +788,31 @@ const Inventory = () => {
                               key={item.id}
                               className="hover:bg-muted/30 transition-colors"
                             >
-                              <TableCell className="font-medium border px-4 py-3">{item.name}</TableCell>
-                              <TableCell className="border px-4 py-3">{item.category || '-'}</TableCell>
-                              <TableCell className="text-red-600 font-medium border px-4 py-3">
+                              <TableCell className="font-medium border px-1 py-1 text-xs">{item.name}</TableCell>
+                              <TableCell className="border px-1 py-1 text-xs">{item.category || '-'}</TableCell>
+                              <TableCell className="text-red-600 font-medium border px-1 py-1 text-xs">
                                 {item.quantity} {item.unit || ''}
                               </TableCell>
-                              <TableCell className="border px-4 py-3">{item.reorder_level}</TableCell>
-                              <TableCell className="border px-4 py-3">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => openEditDialog(item)}
-                                >
-                                  Update Stock
-                                </Button>
+                              <TableCell className="border px-1 py-1 text-xs">{item.reorder_level}</TableCell>
+                              <TableCell className="border px-1 py-1 text-xs">{item.location || '-'}</TableCell>
+                              <TableCell className="border px-1 py-1 text-center">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <MoreHorizontal className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openEditDialog(item)}>
+                                      <Pencil className="h-3.5 w-3.5 mr-2" />
+                                      Update Stock
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </TableCell>
                             </TableRow>
                           ))}
