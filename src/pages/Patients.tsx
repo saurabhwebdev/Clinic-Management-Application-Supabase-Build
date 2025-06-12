@@ -324,17 +324,17 @@ const Patients = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Patients</h1>
+      <div className="container mx-auto py-4 px-4 sm:px-6 sm:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">Patients</h1>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
+              <Button className="flex items-center gap-2 w-full sm:w-auto">
                 <UserPlus size={16} />
                 <span>Add New Patient</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Patient</DialogTitle>
                 <DialogDescription>
@@ -343,7 +343,7 @@ const Patients = () => {
               </DialogHeader>
               <form onSubmit={handleAddPatient}>
                 <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="first_name">First Name *</Label>
                       <Input
@@ -366,7 +366,7 @@ const Patients = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="date_of_birth">Date of Birth</Label>
                       <Input
@@ -395,7 +395,7 @@ const Patients = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
                       <Input
@@ -427,7 +427,7 @@ const Patients = () => {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="emergency_contact_name">Emergency Contact Name</Label>
                       <Input
@@ -490,8 +490,8 @@ const Patients = () => {
                     />
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button type="submit">Add Patient</Button>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  <Button type="submit" className="w-full sm:w-auto">Add Patient</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -500,15 +500,15 @@ const Patients = () => {
         
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <CardTitle>Patient Records</CardTitle>
-              <div className="relative max-w-sm">
+              <div className="relative w-full sm:max-w-sm">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search patients..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 max-w-sm"
+                  className="pl-8 w-full"
                 />
               </div>
             </div>
@@ -522,7 +522,8 @@ const Patients = () => {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                {/* Desktop view - Table */}
+                <div className="hidden sm:block overflow-x-auto">
                   <Table className="border-collapse w-full">
                     <TableHeader>
                       <TableRow className="bg-muted/50">
@@ -602,12 +603,89 @@ const Patients = () => {
                   </Table>
                 </div>
                 
+                {/* Mobile view - Cards */}
+                <div className="sm:hidden">
+                  <div className="space-y-3 py-2 px-3">
+                    {currentItems.map((patient) => (
+                      <div key={patient.id} className="border rounded-lg p-3 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <Link to={`/patients/${patient.id}`} className="font-medium hover:underline text-base">
+                            {patient.first_name} {patient.last_name}
+                          </Link>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditDialog(patient)}
+                              className="h-7 w-7"
+                              title="Edit patient"
+                            >
+                              <Pencil size={14} />
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                >
+                                  <MoreVertical size={14} />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <div className="w-full cursor-pointer">
+                                    <PatientExport 
+                                      patientId={patient.id} 
+                                      buttonVariant="ghost" 
+                                      buttonSize="sm"
+                                      className="w-full justify-start px-2"
+                                    />
+                                  </div>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeletePatient(patient.id)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 size={14} className="mr-2" />
+                                  Delete Patient
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
+                          <div className="text-muted-foreground">DOB:</div>
+                          <div>{patient.date_of_birth || '-'}</div>
+                          
+                          <div className="text-muted-foreground">Gender:</div>
+                          <div className="capitalize">{patient.gender || '-'}</div>
+                          
+                          {patient.phone && (
+                            <>
+                              <div className="text-muted-foreground">Phone:</div>
+                              <div>{patient.phone}</div>
+                            </>
+                          )}
+                          
+                          {patient.email && (
+                            <>
+                              <div className="text-muted-foreground">Email:</div>
+                              <div className="truncate">{patient.email}</div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
                 {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-4 border-t">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t gap-4">
+                  <div className="text-sm text-muted-foreground order-2 sm:order-1">
                     Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredPatients.length)} of {filteredPatients.length} patients
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 order-1 sm:order-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -662,7 +740,7 @@ const Patients = () => {
       
       {/* Edit Patient Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Patient</DialogTitle>
             <DialogDescription>
@@ -671,7 +749,7 @@ const Patients = () => {
           </DialogHeader>
           <form onSubmit={handleEditPatient}>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit_first_name">First Name *</Label>
                   <Input
@@ -694,7 +772,7 @@ const Patients = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit_date_of_birth">Date of Birth</Label>
                   <Input
@@ -723,7 +801,7 @@ const Patients = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit_email">Email</Label>
                   <Input
@@ -755,7 +833,7 @@ const Patients = () => {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit_emergency_contact_name">Emergency Contact Name</Label>
                   <Input
@@ -818,8 +896,8 @@ const Patients = () => {
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="submit">Update Patient</Button>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button type="submit" className="w-full sm:w-auto">Update Patient</Button>
             </DialogFooter>
           </form>
         </DialogContent>
