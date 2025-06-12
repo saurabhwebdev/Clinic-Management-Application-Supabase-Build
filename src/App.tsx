@@ -22,6 +22,8 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PublicBooking from "./pages/PublicBooking";
+import BookingConfirmation from "./pages/BookingConfirmation";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,10 @@ const App = () => (
             <Route path="/signup" element={<SignUp />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            
+            {/* Public Booking Routes */}
+            <Route path="/book/:slug" element={<PublicBooking />} />
+            <Route path="/book/:slug/confirmation" element={<BookingConfirmation />} />
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>

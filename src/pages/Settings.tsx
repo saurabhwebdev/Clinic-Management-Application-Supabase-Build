@@ -12,6 +12,7 @@ import Layout from "@/components/Layout";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RegionalSettings, { RegionalSettingsRef } from "@/components/RegionalSettings";
+import PublicBookingSettings, { PublicBookingSettingsRef } from "@/components/PublicBookingSettings";
 
 // Define interfaces for type safety
 interface Region {
@@ -38,6 +39,7 @@ const Settings = () => {
   
   // Clinic state
   const [clinicData, setClinicData] = useState({
+    clinicId: "",
     clinicName: "",
     address: "",
     phone: "",
@@ -66,11 +68,15 @@ const Settings = () => {
   // Reference to the RegionalSettings component
   const regionalSettingsRef = useRef<RegionalSettingsRef>(null);
   
+  // Reference to the PublicBookingSettings component
+  const publicBookingSettingsRef = useRef<PublicBookingSettingsRef>(null);
+  
   const [loading, setLoading] = useState({
     profile: false,
     clinic: false,
     doctor: false,
-    region: false
+    region: false,
+    publicBooking: false
   });
 
   // Fetch data on component mount
@@ -143,6 +149,7 @@ const Settings = () => {
       
       if (data) {
         setClinicData({
+          clinicId: data.id || "",
           clinicName: data.name || "",
           address: data.address || "",
           phone: data.phone || "",
@@ -485,6 +492,55 @@ const Settings = () => {
       setLoading(prev => ({ ...prev, region: false }));
     }
   };
+  
+  // Save public booking settings
+  const savePublicBookingSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(prev => ({ ...prev, publicBooking: true }));
+    
+    try {
+      // Get clinic ID
+      const { data: clinicData, error: clinicError } = await supabase
+        .from('clinics')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+      
+      if (clinicError) {
+        if (clinicError.code === 'PGRST116') {
+          toast({
+            title: "Error",
+            description: "Please set up your clinic information first.",
+            variant: "destructive",
+          });
+        } else {
+          throw clinicError;
+        }
+        return;
+      }
+      
+      // Save public booking settings if available
+      if (publicBookingSettingsRef.current) {
+        const success = await publicBookingSettingsRef.current.savePublicBookingSettings();
+        
+        if (success) {
+          toast({
+            title: "Public booking settings updated",
+            description: "Your public booking settings have been saved successfully.",
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update public booking settings. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error updating public booking settings:", error);
+    } finally {
+      setLoading(prev => ({ ...prev, publicBooking: false }));
+    }
+  };
 
   // Clear signature
   const clearSignature = () => {
@@ -503,11 +559,12 @@ const Settings = () => {
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsList className="grid w-full grid-cols-5 mb-8">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="clinic">Clinic</TabsTrigger>
               <TabsTrigger value="doctor">Doctor Details</TabsTrigger>
               <TabsTrigger value="region">Region</TabsTrigger>
+              <TabsTrigger value="booking">Public Booking</TabsTrigger>
             </TabsList>
             
             <TabsContent value="profile">
@@ -902,6 +959,44 @@ const Settings = () => {
                       className="w-full"
                     >
                       {loading.region ? "Saving..." : "Save All Settings"}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="booking">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Public Booking Page</CardTitle>
+                  <CardDescription>
+                    Configure your public booking page for patients to schedule appointments online.
+                  </CardDescription>
+                </CardHeader>
+                <form onSubmit={savePublicBookingSettings}>
+                  <CardContent className="space-y-6">
+                    {clinicData.clinicName ? (
+                      <PublicBookingSettings
+                        userId={user?.id || ''}
+                        clinicId={clinicData.clinicId || ''}
+                        clinicName={clinicData.clinicName}
+                        ref={publicBookingSettingsRef}
+                      />
+                    ) : (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                        <p className="text-yellow-800">
+                          Please set up your clinic information in the Clinic tab before configuring public booking.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      type="submit" 
+                      disabled={loading.publicBooking || !clinicData.clinicName}
+                      className="w-full"
+                    >
+                      {loading.publicBooking ? "Saving..." : "Save Settings"}
                     </Button>
                   </CardFooter>
                 </form>

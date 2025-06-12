@@ -4,7 +4,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon, Users, Receipt, Package, FileText, AlertCircle } from 'lucide-react';
+import { CalendarIcon, Users, Receipt, Package, FileText, AlertCircle, CalendarPlus } from 'lucide-react';
+import PendingBookings from '@/components/PendingBookings';
 
 // Define interfaces
 interface DashboardStats {
@@ -14,6 +15,7 @@ interface DashboardStats {
   invoicesPending: number;
   lowStockCount: number;
   prescriptionsCount: number;
+  pendingBookingsCount: number;
 }
 
 interface Appointment {
@@ -54,7 +56,8 @@ const Dashboard = () => {
     invoicesTotal: 0,
     invoicesPending: 0,
     lowStockCount: 0,
-    prescriptionsCount: 0
+    prescriptionsCount: 0,
+    pendingBookingsCount: 0
   });
   const [recentAppointments, setRecentAppointments] = useState<any[]>([]);
   const [lowStockItems, setLowStockItems] = useState<any[]>([]);
@@ -168,6 +171,15 @@ const Dashboard = () => {
         .eq('user_id', user.id);
       
       if (prescriptionsError) throw prescriptionsError;
+      
+      // Fetch pending booking requests count
+      const { data: pendingBookingsData, error: pendingBookingsError } = await supabase
+        .from('public_booking_requests')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'pending');
+      
+      if (pendingBookingsError) throw pendingBookingsError;
 
       setStats({
         appointmentsCount: appointmentsData?.length || 0,
@@ -175,7 +187,8 @@ const Dashboard = () => {
         invoicesTotal,
         invoicesPending,
         lowStockCount: lowStock.length,
-        prescriptionsCount: prescriptionsData?.length || 0
+        prescriptionsCount: prescriptionsData?.length || 0,
+        pendingBookingsCount: pendingBookingsData?.length || 0
       });
 
       // Type assertion to avoid TypeScript errors
@@ -378,6 +391,13 @@ const Dashboard = () => {
               </Card>
             </Link>
           </div>
+          
+          {/* Pending Booking Requests */}
+          {stats.pendingBookingsCount > 0 && (
+            <div className="grid grid-cols-1 gap-6">
+              <PendingBookings onRefreshNeeded={fetchDashboardData} />
+            </div>
+          )}
         </div>
       </div>
     </Layout>
