@@ -319,8 +319,8 @@ const Inventory = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="container mx-auto py-4 px-4 sm:px-6 sm:py-6 space-y-6">
+        <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
             <p className="text-muted-foreground">
@@ -328,8 +328,8 @@ const Inventory = () => {
             </p>
           </div>
           
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="relative w-full md:w-64">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
@@ -341,12 +341,12 @@ const Inventory = () => {
             </div>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Package className="mr-2 h-4 w-4" />
                   Add Item
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add New Inventory Item</DialogTitle>
                   <DialogDescription>
@@ -500,9 +500,9 @@ const Inventory = () => {
         </div>
         
         <Tabs defaultValue="all" className="w-full">
-          <TabsList>
-            <TabsTrigger value="all">All Items</TabsTrigger>
-            <TabsTrigger value="low-stock" className="flex items-center gap-1">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="all" className="flex-1 sm:flex-none">All Items</TabsTrigger>
+            <TabsTrigger value="low-stock" className="flex-1 sm:flex-none flex items-center gap-1">
               Low Stock
               {lowStockItems.length > 0 && (
                 <span className="bg-red-100 text-red-600 text-xs font-medium px-2 py-0.5 rounded-full">
@@ -529,56 +529,111 @@ const Inventory = () => {
                   </div>
                 ) : (
                   <>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Quantity</TableHead>
-                          <TableHead>Reorder Level</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                    {/* Mobile view - cards */}
+                    <div className="sm:hidden">
+                      <div className="space-y-3 p-3">
                         {currentItems.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.name}</TableCell>
-                            <TableCell>{item.category || '-'}</TableCell>
-                            <TableCell className={item.quantity <= (item.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
-                              {item.quantity} {item.unit || ''}
-                            </TableCell>
-                            <TableCell>{item.reorder_level || '-'}</TableCell>
-                            <TableCell>{item.location || '-'}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openEditDialog(item)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteItem(item.id)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
+                          <Card key={item.id} className="overflow-hidden">
+                            <CardContent className="p-0">
+                              <div className="p-4 bg-muted/30">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h3 className="font-semibold">{item.name}</h3>
+                                    <p className="text-sm text-muted-foreground">{item.category || 'No category'}</p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => openEditDialog(item)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteItem(item.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
-                            </TableCell>
-                          </TableRow>
+                              <div className="p-4 space-y-2">
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-muted-foreground">Quantity:</span>
+                                  <span className={item.quantity <= (item.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
+                                    {item.quantity} {item.unit || ''}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-muted-foreground">Reorder Level:</span>
+                                  <span>{item.reorder_level || '-'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-muted-foreground">Location:</span>
+                                  <span>{item.location || '-'}</span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
                         ))}
-                      </TableBody>
-                    </Table>
+                      </div>
+                    </div>
+                    
+                    {/* Desktop view - table */}
+                    <div className="hidden sm:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Quantity</TableHead>
+                            <TableHead>Reorder Level</TableHead>
+                            <TableHead>Location</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {currentItems.map((item) => (
+                            <TableRow key={item.id}>
+                              <TableCell className="font-medium">{item.name}</TableCell>
+                              <TableCell>{item.category || '-'}</TableCell>
+                              <TableCell className={item.quantity <= (item.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
+                                {item.quantity} {item.unit || ''}
+                              </TableCell>
+                              <TableCell>{item.reorder_level || '-'}</TableCell>
+                              <TableCell>{item.location || '-'}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openEditDialog(item)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteItem(item.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                     
                     {/* Pagination */}
-                    <div className="flex items-center justify-between px-4 py-4 border-t">
-                      <div className="text-sm text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t gap-4">
+                      <div className="text-sm text-muted-foreground order-2 sm:order-1">
                         Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredItems.length)} of {filteredItems.length} items
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 order-1 sm:order-2">
                         <Button
                           variant="outline"
                           size="sm"
