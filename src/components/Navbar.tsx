@@ -59,10 +59,10 @@ const Navbar = () => {
           {/* Logo - always visible */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="bg-blue-600 text-white p-1.5 rounded-md">
+              <div className="bg-black text-white p-1.5 rounded-md">
                 <LayoutDashboard size={20} />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-black">
                 ClinicFlow
               </span>
             </Link>
@@ -136,7 +136,7 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full overflow-hidden border border-gray-200">
                     <Avatar className="h-9 w-9">
-                      <AvatarFallback className="bg-blue-100 text-blue-600 font-medium">
+                      <AvatarFallback className="bg-gray-100 text-gray-800 font-medium">
                         {user.email?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
@@ -169,12 +169,12 @@ const Navbar = () => {
             ) : (
               <div className="hidden md:flex items-center space-x-2">
                 <Link to="/signin">
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                  <Button variant="ghost" size="sm" className="text-gray-800 hover:text-black">
                     Sign In
                   </Button>
                 </Link>
                 <Link to="/signup">
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Button size="sm" className="bg-black hover:bg-gray-800 text-white">
                     Sign Up
                   </Button>
                 </Link>
@@ -192,10 +192,10 @@ const Navbar = () => {
                 <SheetContent side="left" className="w-[80%] sm:w-[350px] p-0">
                   <SheetHeader className="p-4 border-b">
                     <SheetTitle className="flex items-center">
-                      <div className="bg-blue-600 text-white p-1.5 rounded-md mr-2">
+                      <div className="bg-black text-white p-1.5 rounded-md mr-2">
                         <LayoutDashboard size={20} />
                       </div>
-                      <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                      <span className="text-xl font-bold text-black">
                         ClinicFlow
                       </span>
                     </SheetTitle>
@@ -280,7 +280,7 @@ const Navbar = () => {
                       <div className="mt-6 pt-6 border-t">
                         <div className="px-3 py-2 flex items-center">
                           <Avatar className="h-9 w-9 mr-3">
-                            <AvatarFallback className="bg-blue-100 text-blue-600 font-medium">
+                            <AvatarFallback className="bg-gray-100 text-gray-800 font-medium">
                               {user.email?.charAt(0).toUpperCase() || 'U'}
                             </AvatarFallback>
                           </Avatar>
@@ -310,7 +310,7 @@ const Navbar = () => {
                         </SheetClose>
                         <SheetClose asChild>
                           <Link to="/signup" className="w-full block">
-                            <Button className="w-full bg-blue-600 hover:bg-blue-700">Sign Up</Button>
+                            <Button className="w-full bg-black hover:bg-gray-800 text-white">Sign Up</Button>
                           </Link>
                         </SheetClose>
                       </div>
@@ -324,7 +324,7 @@ const Navbar = () => {
             {!user && (
               <div className="md:hidden flex">
                 <Link to="/signin">
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                  <Button variant="ghost" size="sm" className="text-gray-800 hover:text-black">
                     Sign In
                   </Button>
                 </Link>
@@ -346,14 +346,14 @@ const NavItem = ({ to, icon, label, isActive }: { to: string; icon: React.ReactN
         className={cn(
           "flex items-center px-3 py-2 rounded-md transition-colors",
           isActive
-            ? "bg-blue-50 text-blue-600"
+            ? "bg-gray-100 text-black"
             : "text-gray-600 hover:bg-gray-100"
         )}
       >
         <div className="relative">
           {icon}
           {isActive && (
-            <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
+            <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-black rounded-full" />
           )}
         </div>
       </Link>
@@ -369,7 +369,7 @@ const MobileNavItem = ({ to, icon, label, isActive }: { to: string; icon: React.
     className={cn(
       "flex items-center px-3 py-2 rounded-md transition-colors",
       isActive
-        ? "bg-blue-50 text-blue-600"
+        ? "bg-gray-100 text-black"
         : "text-gray-600 hover:bg-gray-100"
     )}
   >
