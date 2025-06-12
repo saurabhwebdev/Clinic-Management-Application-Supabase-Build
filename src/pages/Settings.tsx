@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RegionalSettings, { RegionalSettingsRef } from "@/components/RegionalSettings";
 import PublicBookingSettings, { PublicBookingSettingsRef } from "@/components/PublicBookingSettings";
+import EmailSettings, { EmailSettingsRef } from "@/components/EmailSettings";
 
 // Define interfaces for type safety
 interface Region {
@@ -71,12 +72,16 @@ const Settings = () => {
   // Reference to the PublicBookingSettings component
   const publicBookingSettingsRef = useRef<PublicBookingSettingsRef>(null);
   
+  // Reference to the EmailSettings component
+  const emailSettingsRef = useRef<EmailSettingsRef>(null);
+  
   const [loading, setLoading] = useState({
     profile: false,
     clinic: false,
     doctor: false,
     region: false,
-    publicBooking: false
+    publicBooking: false,
+    email: false
   });
 
   // Fetch data on component mount
@@ -541,6 +546,35 @@ const Settings = () => {
       setLoading(prev => ({ ...prev, publicBooking: false }));
     }
   };
+  
+  // Save email settings
+  const saveEmailSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(prev => ({ ...prev, email: true }));
+    
+    try {
+      // Save email settings if available
+      if (emailSettingsRef.current) {
+        const success = await emailSettingsRef.current.saveEmailSettings();
+        
+        if (success) {
+          toast({
+            title: "Email settings updated",
+            description: "Your email configuration has been saved successfully.",
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update email settings. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error updating email settings:", error);
+    } finally {
+      setLoading(prev => ({ ...prev, email: false }));
+    }
+  };
 
   // Clear signature
   const clearSignature = () => {
@@ -559,12 +593,13 @@ const Settings = () => {
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-8">
+            <TabsList className="grid w-full grid-cols-6 mb-8">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="clinic">Clinic</TabsTrigger>
               <TabsTrigger value="doctor">Doctor Details</TabsTrigger>
               <TabsTrigger value="region">Region</TabsTrigger>
               <TabsTrigger value="booking">Public Booking</TabsTrigger>
+              <TabsTrigger value="email">Email</TabsTrigger>
             </TabsList>
             
             <TabsContent value="profile">
@@ -997,6 +1032,42 @@ const Settings = () => {
                       className="w-full"
                     >
                       {loading.publicBooking ? "Saving..." : "Save Settings"}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="email">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Email Settings</CardTitle>
+                  <CardDescription>
+                    Configure email notifications for appointments, invoices, and other communications.
+                  </CardDescription>
+                </CardHeader>
+                <form onSubmit={saveEmailSettings}>
+                  <CardContent className="space-y-6">
+                    {user?.id ? (
+                      <EmailSettings
+                        userId={user.id}
+                        ref={emailSettingsRef}
+                      />
+                    ) : (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                        <p className="text-yellow-800">
+                          Please sign in to configure email settings.
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      type="submit" 
+                      disabled={loading.email || !user?.id}
+                      className="w-full"
+                    >
+                      {loading.email ? "Saving..." : "Save Settings"}
                     </Button>
                   </CardFooter>
                 </form>
