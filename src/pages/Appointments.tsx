@@ -45,7 +45,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  Video
+  Video,
+  MoreHorizontal
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -1106,11 +1107,13 @@ const Appointments = () => {
                   <Table className="border-collapse w-full">
                     <TableHeader>
                       <TableRow className="bg-muted/50">
-                        <TableHead className="h-9 px-2 text-xs font-medium">Date & Time</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium">Patient</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Date</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Time</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Patient Name</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium">Contact</TableHead>
                         <TableHead className="h-9 px-2 text-xs font-medium">Title</TableHead>
                         <TableHead className="h-9 px-2 text-xs font-medium">Status</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium w-[80px] text-center">Actions</TableHead>
+                        <TableHead className="h-9 px-2 text-xs font-medium w-[60px] text-center">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1118,7 +1121,9 @@ const Appointments = () => {
                         <TableRow key={appointment.id} className="hover:bg-muted/50 border-b border-border/50">
                           <TableCell className="p-2 text-sm">
                             <div className="font-medium">{formatAppointmentDate(appointment.date)}</div>
-                            <div className="text-xs text-muted-foreground">
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">
+                            <div className="text-sm">
                               {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
                             </div>
                           </TableCell>
@@ -1126,6 +1131,8 @@ const Appointments = () => {
                             <div className="font-medium">
                               {appointment.patient?.first_name} {appointment.patient?.last_name}
                             </div>
+                          </TableCell>
+                          <TableCell className="p-2 text-sm">
                             <div className="text-xs text-muted-foreground">
                               {appointment.patient?.phone || appointment.patient?.email || 'No contact info'}
                             </div>
@@ -1153,55 +1160,59 @@ const Appointments = () => {
                             </span>
                           </TableCell>
                           <TableCell className="p-2 text-sm">
-                            <div className="flex justify-center gap-1">
-                              {appointment.is_virtual && appointment.status === 'scheduled' && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => joinVirtualMeeting(appointment.meeting_url)}
-                                  className="h-8 w-8 text-blue-600 hover:text-blue-600 hover:bg-blue-50"
-                                  title="Join virtual appointment"
-                                  disabled={isJoiningMeeting}
-                                >
-                                  {isJoiningMeeting ? (
-                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-                                  ) : (
-                                    <Video size={16} />
+                            <div className="flex justify-center">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                  >
+                                    <MoreHorizontal size={16} />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-[160px]">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  {appointment.is_virtual && appointment.status === 'scheduled' && (
+                                    <DropdownMenuItem 
+                                      onClick={() => joinVirtualMeeting(appointment.meeting_url)}
+                                      disabled={isJoiningMeeting}
+                                      className="text-blue-600"
+                                    >
+                                      {isJoiningMeeting ? (
+                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent mr-2" />
+                                      ) : (
+                                        <Video size={16} className="mr-2" />
+                                      )}
+                                      <span>Join Meeting</span>
+                                    </DropdownMenuItem>
                                   )}
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openEditDialog(appointment)}
-                                className="h-8 w-8"
-                                title="Edit appointment"
-                              >
-                                <Pencil size={16} />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteAppointment(appointment.id)}
-                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                title="Delete appointment"
-                              >
-                                <Trash2 size={16} />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => generateAppointmentSlip(appointment)}
-                                className="h-8 w-8 text-blue-600 hover:text-blue-600 hover:bg-blue-50"
-                                title="Export appointment slip"
-                                disabled={isExporting}
-                              >
-                                {isExporting ? (
-                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-                                ) : (
-                                  <FileText size={16} />
-                                )}
-                              </Button>
+                                  <DropdownMenuItem onClick={() => openEditDialog(appointment)}>
+                                    <Pencil size={16} className="mr-2" />
+                                    <span>Edit</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => generateAppointmentSlip(appointment)}
+                                    disabled={isExporting}
+                                    className="text-blue-600"
+                                  >
+                                    {isExporting ? (
+                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent mr-2" />
+                                    ) : (
+                                      <FileText size={16} className="mr-2" />
+                                    )}
+                                    <span>Export Slip</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDeleteAppointment(appointment.id)}
+                                    className="text-red-600"
+                                  >
+                                    <Trash2 size={16} className="mr-2" />
+                                    <span>Delete</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </TableCell>
                         </TableRow>
