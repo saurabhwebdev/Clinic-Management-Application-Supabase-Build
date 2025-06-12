@@ -870,17 +870,17 @@ const Appointments = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Appointments</h1>
+      <div className="container mx-auto py-4 px-4 sm:px-6 sm:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">Appointments</h1>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
+              <Button className="flex items-center gap-2 w-full sm:w-auto">
                 <CalendarPlus size={16} />
                 <span>Schedule New Appointment</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Schedule New Appointment</DialogTitle>
                 <DialogDescription>
@@ -921,7 +921,7 @@ const Appointments = () => {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Date *</Label>
                       <Popover>
@@ -1012,8 +1012,8 @@ const Appointments = () => {
                     />
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button type="submit">Schedule Appointment</Button>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  <Button type="submit" className="w-full sm:w-auto">Schedule Appointment</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -1022,7 +1022,7 @@ const Appointments = () => {
         
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <CardTitle>
                 {activeTab === 'all' ? 'All Appointments' :
                  activeTab === 'today' ? 'Today\'s Appointments' :
@@ -1030,19 +1030,19 @@ const Appointments = () => {
                  activeTab === 'week' ? 'This Week\'s Appointments' :
                  'This Month\'s Appointments'}
               </CardTitle>
-              <div className="flex items-center gap-2">
-                <div className="relative max-w-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                <div className="relative w-full sm:w-auto">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search appointments..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 w-[240px]"
+                    className="pl-8 w-full sm:w-[240px]"
                   />
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="ml-2 h-9 flex items-center gap-1">
+                    <Button variant="outline" size="sm" className="h-9 flex items-center gap-1 w-full sm:w-auto">
                       <Filter size={14} />
                       <span>Filter</span>
                       <ChevronDown size={14} className="ml-1" />
@@ -1101,7 +1101,8 @@ const Appointments = () => {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                {/* Desktop view - Table */}
+                <div className="hidden sm:block overflow-x-auto">
                   <Table className="border-collapse w-full">
                     <TableHeader>
                       <TableRow className="bg-muted/50">
@@ -1209,12 +1210,112 @@ const Appointments = () => {
                   </Table>
                 </div>
                 
+                {/* Mobile view - Cards */}
+                <div className="sm:hidden">
+                  <div className="space-y-3 py-2 px-3">
+                    {currentItems.map((appointment) => (
+                      <div key={appointment.id} className="border rounded-lg p-3 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="font-medium">{formatAppointmentDate(appointment.date)}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
+                            </div>
+                          </div>
+                          <span className={cn(
+                            "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
+                            appointment.status === 'scheduled' && "bg-blue-100 text-blue-800",
+                            appointment.status === 'completed' && "bg-green-100 text-green-800",
+                            appointment.status === 'cancelled' && "bg-red-100 text-red-800",
+                            appointment.status === 'no-show' && "bg-yellow-100 text-yellow-800"
+                          )}>
+                            {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                          </span>
+                        </div>
+                        
+                        <div className="mb-2">
+                          <div className="font-medium">
+                            {appointment.patient?.first_name} {appointment.patient?.last_name}
+                          </div>
+                          <div className="text-sm truncate">
+                            {appointment.title}
+                            {appointment.is_virtual && (
+                              <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 inline-flex">
+                                <Video size={12} />
+                                <span>Virtual</span>
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {appointment.patient?.phone || appointment.patient?.email || 'No contact info'}
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-end gap-1 mt-3 border-t pt-2">
+                          {appointment.is_virtual && appointment.status === 'scheduled' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => joinVirtualMeeting(appointment.meeting_url)}
+                              className="h-8 text-blue-600 hover:text-blue-600 hover:bg-blue-50"
+                              title="Join virtual appointment"
+                              disabled={isJoiningMeeting}
+                            >
+                              {isJoiningMeeting ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent mr-1" />
+                              ) : (
+                                <Video size={14} className="mr-1" />
+                              )}
+                              <span>Join</span>
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(appointment)}
+                            className="h-8"
+                            title="Edit appointment"
+                          >
+                            <Pencil size={14} className="mr-1" />
+                            <span>Edit</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => generateAppointmentSlip(appointment)}
+                            className="h-8 text-blue-600 hover:text-blue-600 hover:bg-blue-50"
+                            title="Export appointment slip"
+                            disabled={isExporting}
+                          >
+                            {isExporting ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent mr-1" />
+                            ) : (
+                              <FileText size={14} className="mr-1" />
+                            )}
+                            <span>Export</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteAppointment(appointment.id)}
+                            className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Delete appointment"
+                          >
+                            <Trash2 size={14} className="mr-1" />
+                            <span>Delete</span>
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
                 {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-4 border-t">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t gap-4">
+                  <div className="text-sm text-muted-foreground order-2 sm:order-1">
                     Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredAppointments.length)} of {filteredAppointments.length} appointments
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 order-1 sm:order-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -1269,7 +1370,7 @@ const Appointments = () => {
       
       {/* Edit Appointment Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Appointment</DialogTitle>
             <DialogDescription>
@@ -1309,7 +1410,7 @@ const Appointments = () => {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Date *</Label>
                   <Popover>
@@ -1398,8 +1499,8 @@ const Appointments = () => {
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="submit">Update Appointment</Button>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button type="submit" className="w-full sm:w-auto">Update Appointment</Button>
             </DialogFooter>
           </form>
         </DialogContent>
