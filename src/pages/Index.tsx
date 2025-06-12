@@ -25,7 +25,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_#f3f4f6_0%,_transparent_60%)]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="py-8 md:py-12">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
               <div className="space-y-8">
                 <div className="space-y-5">
                   <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900">
