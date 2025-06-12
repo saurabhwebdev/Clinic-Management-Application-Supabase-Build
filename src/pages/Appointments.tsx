@@ -1104,53 +1104,53 @@ const Appointments = () => {
               <>
                 {/* Desktop view - Table */}
                 <div className="hidden sm:block overflow-x-auto">
-                  <Table className="border-collapse w-full">
+                  <Table className="border-collapse w-full border border-gray-200">
                     <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="h-9 px-2 text-xs font-medium">Date</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium">Time</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium">Patient Name</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium">Contact</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium">Title</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium">Status</TableHead>
-                        <TableHead className="h-9 px-2 text-xs font-medium w-[60px] text-center">Actions</TableHead>
+                      <TableRow className="bg-gray-50 border-b border-gray-200">
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">Date</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">Time</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">Patient Name</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">Contact</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">Title</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 border-r border-gray-200">Status</TableHead>
+                        <TableHead className="h-8 px-2 py-1 text-xs font-medium text-gray-700 w-[60px] text-center">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {currentItems.map((appointment) => (
-                        <TableRow key={appointment.id} className="hover:bg-muted/50 border-b border-border/50">
-                          <TableCell className="p-2 text-sm">
-                            <div className="font-medium">{formatAppointmentDate(appointment.date)}</div>
+                        <TableRow key={appointment.id} className="hover:bg-gray-50 border-b border-gray-200">
+                          <TableCell className="p-1 px-2 text-sm border-r border-gray-200">
+                            <div className="text-sm">{formatAppointmentDate(appointment.date)}</div>
                           </TableCell>
-                          <TableCell className="p-2 text-sm">
+                          <TableCell className="p-1 px-2 text-sm border-r border-gray-200">
                             <div className="text-sm">
                               {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
                             </div>
                           </TableCell>
-                          <TableCell className="p-2 text-sm">
-                            <div className="font-medium">
+                          <TableCell className="p-1 px-2 text-sm border-r border-gray-200">
+                            <div className="text-sm">
                               {appointment.patient?.first_name} {appointment.patient?.last_name}
                             </div>
                           </TableCell>
-                          <TableCell className="p-2 text-sm">
-                            <div className="text-xs text-muted-foreground">
+                          <TableCell className="p-1 px-2 text-sm border-r border-gray-200">
+                            <div className="text-xs text-gray-600">
                               {appointment.patient?.phone || appointment.patient?.email || 'No contact info'}
                             </div>
                           </TableCell>
-                          <TableCell className="p-2 text-sm">
+                          <TableCell className="p-1 px-2 text-sm border-r border-gray-200">
                             <div className="flex items-center">
-                              {appointment.title}
+                              <span className="text-sm">{appointment.title}</span>
                               {appointment.is_virtual && (
-                                <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
-                                  <Video size={12} />
-                                  <span>Virtual</span>
+                                <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 py-0 h-5">
+                                  <Video size={10} />
+                                  <span className="text-xs">Virtual</span>
                                 </Badge>
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="p-2 text-sm">
+                          <TableCell className="p-1 px-2 text-sm border-r border-gray-200">
                             <span className={cn(
-                              "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
+                              "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
                               appointment.status === 'scheduled' && "bg-blue-100 text-blue-800",
                               appointment.status === 'completed' && "bg-green-100 text-green-800",
                               appointment.status === 'cancelled' && "bg-red-100 text-red-800",
@@ -1159,16 +1159,16 @@ const Appointments = () => {
                               {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                             </span>
                           </TableCell>
-                          <TableCell className="p-2 text-sm">
+                          <TableCell className="p-1 px-2 text-sm text-center">
                             <div className="flex justify-center">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8"
+                                    className="h-7 w-7"
                                   >
-                                    <MoreHorizontal size={16} />
+                                    <MoreHorizontal size={14} />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-[160px]">
