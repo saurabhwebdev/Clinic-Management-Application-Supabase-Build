@@ -33,7 +33,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { 
+import {
   CalendarIcon, 
   Clock, 
   Pencil, 
@@ -44,7 +44,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  FileText
+  FileText,
+  Video
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -59,6 +60,7 @@ import {
 import { cn } from '@/lib/utils';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import QRCode from 'qrcode';
 
 // Define interfaces
 interface Appointment {
@@ -72,6 +74,9 @@ interface Appointment {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  is_virtual: boolean;
+  meeting_url: string | null;
+  meeting_id: string | null;
   patient: {
     first_name: string;
     last_name: string;
@@ -119,9 +124,13 @@ const Appointments = () => {
     end_time: '',
     status: 'scheduled',
     notes: '',
+    is_virtual: false,
+    meeting_id: '',
+    meeting_url: '',
   });
 
   const [isExporting, setIsExporting] = useState(false);
+  const [isJoiningMeeting, setIsJoiningMeeting] = useState(false);
 
   // Fetch appointments and patients on component mount
   useEffect(() => {
@@ -309,6 +318,17 @@ const Appointments = () => {
         return;
       }
       
+      // Generate meeting ID and URL for virtual appointments
+      let meetingId = null;
+      let meetingUrl = null;
+      
+      if (formData.is_virtual) {
+        // Create a unique meeting ID based on timestamp and random string
+        meetingId = `clinic-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        // Create Jitsi meeting URL
+        meetingUrl = `https://meet.jit.si/${meetingId}`;
+      }
+      
       const { data, error } = await supabase.from('appointments').insert({
         user_id: user.id,
         patient_id: formData.patient_id,
@@ -318,6 +338,9 @@ const Appointments = () => {
         end_time: formData.end_time,
         status: formData.status,
         notes: formData.notes || null,
+        is_virtual: formData.is_virtual,
+        meeting_id: meetingId,
+        meeting_url: meetingUrl,
       }).select(`
         *,
         patient:patients(first_name, last_name, phone, email)
@@ -339,6 +362,9 @@ const Appointments = () => {
         end_time: '',
         status: 'scheduled',
         notes: '',
+        is_virtual: false,
+        meeting_id: '',
+        meeting_url: '',
       });
       setIsAddDialogOpen(false);
       
@@ -419,6 +445,22 @@ const Appointments = () => {
         return;
       }
       
+      // Handle virtual meeting updates
+      let meetingId = currentAppointment.meeting_id;
+      let meetingUrl = currentAppointment.meeting_url;
+      
+      // If changing from in-person to virtual, generate new meeting details
+      if (formData.is_virtual && !currentAppointment.is_virtual) {
+        meetingId = `clinic-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        meetingUrl = `https://meet.jit.si/${meetingId}`;
+      }
+      
+      // If changing from virtual to in-person, clear meeting details
+      if (!formData.is_virtual && currentAppointment.is_virtual) {
+        meetingId = null;
+        meetingUrl = null;
+      }
+      
       const { error } = await supabase
         .from('appointments')
         .update({
@@ -429,6 +471,9 @@ const Appointments = () => {
           end_time: formData.end_time,
           status: formData.status,
           notes: formData.notes || null,
+          is_virtual: formData.is_virtual,
+          meeting_id: meetingId,
+          meeting_url: meetingUrl,
           updated_at: new Date().toISOString(),
         })
         .eq('id', currentAppointment.id);
@@ -484,6 +529,27 @@ const Appointments = () => {
     }
   };
 
+  // Join virtual meeting
+  const joinVirtualMeeting = (meetingUrl: string) => {
+    if (!meetingUrl) {
+      toast({
+        title: 'Error',
+        description: 'Meeting URL is not available.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setIsJoiningMeeting(true);
+    
+    // Open meeting in a new tab
+    window.open(meetingUrl, '_blank');
+    
+    setTimeout(() => {
+      setIsJoiningMeeting(false);
+    }, 1000);
+  };
+
   // Open edit dialog and populate form
   const openEditDialog = (appointment: Appointment) => {
     setCurrentAppointment(appointment);
@@ -496,6 +562,9 @@ const Appointments = () => {
       end_time: appointment.end_time,
       status: appointment.status,
       notes: appointment.notes || '',
+      is_virtual: appointment.is_virtual || false,
+      meeting_id: appointment.meeting_id || '',
+      meeting_url: appointment.meeting_url || '',
     });
     
     if (appointment.date) {
@@ -596,6 +665,7 @@ const Appointments = () => {
   const generateAppointmentSlip = async (appointment: Appointment) => {
     try {
       setIsExporting(true);
+      console.log("Generating appointment slip for:", appointment);
       
       // Fetch clinic information
       const { data: clinicData, error: clinicError } = await supabase
@@ -663,9 +733,6 @@ const Appointments = () => {
         // Add divider
         doc.setDrawColor(200, 200, 200);
         doc.line(14, 25, 196, 25);
-        
-        // Set y position for next content
-        const y = 35;
       }
       
       // Add generated date
@@ -683,30 +750,107 @@ const Appointments = () => {
       doc.setFontSize(10);
       
       // Create appointment details table
+      const tableBody = [
+        ['Patient Name', `${appointment.patient.first_name} ${appointment.patient.last_name}`],
+        ['Appointment Title', appointment.title],
+        ['Date', formatAppointmentDate(appointment.date)],
+        ['Time', `${formatTime(appointment.start_time)} - ${formatTime(appointment.end_time)}`],
+        ['Status', appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)],
+        ['Contact', appointment.patient.phone || appointment.patient.email || 'No contact info'],
+      ];
+      
+      // Add virtual appointment details if applicable
+      if (appointment.is_virtual) {
+        tableBody.push(['Appointment Type', 'Virtual (Video Call)']);
+        tableBody.push(['Meeting Link', appointment.meeting_url || 'Not available']);
+        
+        // Add instructions for joining
+        if (appointment.meeting_url) {
+          tableBody.push(['Join Instructions', 'Scan the QR code below or click the meeting link to join the virtual appointment.']);
+        }
+      } else {
+        tableBody.push(['Appointment Type', 'In-person']);
+      }
+      
+      // Add notes at the end
+      tableBody.push(['Notes', appointment.notes || 'No notes']);
+      
+      // Add the table
       autoTable(doc, {
         startY: startY + 5,
         head: [['Field', 'Details']],
-        body: [
-          ['Patient Name', `${appointment.patient.first_name} ${appointment.patient.last_name}`],
-          ['Appointment Title', appointment.title],
-          ['Date', formatAppointmentDate(appointment.date)],
-          ['Time', `${formatTime(appointment.start_time)} - ${formatTime(appointment.end_time)}`],
-          ['Status', appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)],
-          ['Contact', appointment.patient.phone || appointment.patient.email || 'No contact info'],
-          ['Notes', appointment.notes || 'No notes']
-        ],
+        body: tableBody,
         theme: 'grid',
         headStyles: { fillColor: [59, 130, 246] }
       });
       
+      let currentY = 150; // Default position if we can't get the table end position
+      
+      // Try to get the end position of the table
+      try {
+        // @ts-ignore - accessing internal API
+        currentY = (doc as any).lastAutoTable.finalY + 20;
+      } catch (e) {
+        console.warn("Could not get table end position, using default:", currentY);
+      }
+      
+      // Generate and add QR code for virtual meetings
+      if (appointment.is_virtual && appointment.meeting_url) {
+        try {
+          console.log("Generating QR code for virtual meeting:", appointment.meeting_url);
+          
+          // Generate QR code as data URL
+          const qrCodeDataURL = await QRCode.toDataURL(appointment.meeting_url, {
+            errorCorrectionLevel: 'H',
+            margin: 1,
+            width: 150,
+            color: {
+              dark: '#000000',
+              light: '#ffffff'
+            }
+          });
+          
+          // Add QR code title
+          doc.setFontSize(11);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Virtual Meeting QR Code', 105, currentY, { align: 'center' });
+          currentY += 10;
+          
+          // Add QR code image (centered)
+          const qrCodeWidth = 80;
+          const qrCodeHeight = 80;
+          const xPos = (doc.internal.pageSize.getWidth() - qrCodeWidth) / 2;
+          doc.addImage(qrCodeDataURL, 'PNG', xPos, currentY, qrCodeWidth, qrCodeHeight);
+          currentY += qrCodeHeight + 10;
+          
+          // Add URL text below QR code
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.text(appointment.meeting_url, 105, currentY, { align: 'center' });
+          currentY += 15;
+          
+          console.log("QR code added to PDF at position:", currentY);
+        } catch (error) {
+          console.error('Error generating QR code:', error);
+        }
+      }
+      
       // Add footer with instructions
+      const footerY = doc.internal.pageSize.getHeight() - 20;
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(9);
-      doc.text('Please arrive 10 minutes before your scheduled appointment time.', 105, 240, { align: 'center' });
-      doc.text('Bring this slip with you to your appointment.', 105, 245, { align: 'center' });
+      
+      if (appointment.is_virtual) {
+        doc.text('Please join the virtual meeting 5 minutes before your scheduled appointment time.', 105, footerY, { align: 'center' });
+        doc.text('Make sure you have a stable internet connection and your camera/microphone are working.', 105, footerY + 5, { align: 'center' });
+      } else {
+        doc.text('Please arrive 10 minutes before your scheduled appointment time.', 105, footerY, { align: 'center' });
+        doc.text('Bring this slip with you to your appointment.', 105, footerY + 5, { align: 'center' });
+      }
       
       // Save PDF
       doc.save(`appointment-${appointment.id}.pdf`);
+      console.log("PDF saved successfully");
       
       toast({
         title: 'Success',
@@ -844,6 +988,19 @@ const Appointments = () => {
                     </Select>
                   </div>
                   
+                  <div className="flex items-center space-x-2 py-2">
+                    <input
+                      type="checkbox"
+                      id="is_virtual"
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      checked={formData.is_virtual}
+                      onChange={(e) => setFormData(prev => ({ ...prev, is_virtual: e.target.checked }))}
+                    />
+                    <Label htmlFor="is_virtual" className="text-sm font-medium cursor-pointer">
+                      Virtual Appointment (Video Call)
+                    </Label>
+                  </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="notes">Notes</Label>
                     <Textarea
@@ -972,7 +1129,17 @@ const Appointments = () => {
                               {appointment.patient?.phone || appointment.patient?.email || 'No contact info'}
                             </div>
                           </TableCell>
-                          <TableCell className="p-2 text-sm">{appointment.title}</TableCell>
+                          <TableCell className="p-2 text-sm">
+                            <div className="flex items-center">
+                              {appointment.title}
+                              {appointment.is_virtual && (
+                                <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
+                                  <Video size={12} />
+                                  <span>Virtual</span>
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="p-2 text-sm">
                             <span className={cn(
                               "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
@@ -986,6 +1153,22 @@ const Appointments = () => {
                           </TableCell>
                           <TableCell className="p-2 text-sm">
                             <div className="flex justify-center gap-1">
+                              {appointment.is_virtual && appointment.status === 'scheduled' && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => joinVirtualMeeting(appointment.meeting_url)}
+                                  className="h-8 w-8 text-blue-600 hover:text-blue-600 hover:bg-blue-50"
+                                  title="Join virtual appointment"
+                                  disabled={isJoiningMeeting}
+                                >
+                                  {isJoiningMeeting ? (
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                                  ) : (
+                                    <Video size={16} />
+                                  )}
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -1190,6 +1373,19 @@ const Appointments = () => {
                     <SelectItem value="no-show">No Show</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              
+              <div className="flex items-center space-x-2 py-2">
+                <input
+                  type="checkbox"
+                  id="edit_is_virtual"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  checked={formData.is_virtual}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_virtual: e.target.checked }))}
+                />
+                <Label htmlFor="edit_is_virtual" className="text-sm font-medium cursor-pointer">
+                  Virtual Appointment (Video Call)
+                </Label>
               </div>
               
               <div className="space-y-2">
