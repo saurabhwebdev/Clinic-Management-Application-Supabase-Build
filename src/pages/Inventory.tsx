@@ -531,21 +531,22 @@ const Inventory = () => {
                   <>
                     {/* Mobile view - cards */}
                     <div className="sm:hidden">
-                      <div className="space-y-3 p-3">
+                      <div className="space-y-4 p-3">
                         {currentItems.map((item) => (
-                          <Card key={item.id} className="overflow-hidden">
+                          <Card key={item.id} className="overflow-hidden shadow-sm hover:shadow transition-all border-muted/60">
                             <CardContent className="p-0">
-                              <div className="p-4 bg-muted/30">
+                              <div className="p-4 bg-muted/20">
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <h3 className="font-semibold">{item.name}</h3>
+                                    <h3 className="font-semibold text-base">{item.name}</h3>
                                     <p className="text-sm text-muted-foreground">{item.category || 'No category'}</p>
                                   </div>
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-2">
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => openEditDialog(item)}
+                                      className="h-8 w-8 p-0"
                                     >
                                       <Pencil className="h-4 w-4" />
                                     </Button>
@@ -553,25 +554,26 @@ const Inventory = () => {
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => handleDeleteItem(item.id)}
+                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
                                     >
-                                      <Trash2 className="h-4 w-4 text-red-500" />
+                                      <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 </div>
                               </div>
-                              <div className="p-4 space-y-2">
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-muted-foreground">Quantity:</span>
-                                  <span className={item.quantity <= (item.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
+                              <div className="p-4 space-y-3 bg-white">
+                                <div className="flex justify-between items-center py-1 border-b">
+                                  <span className="text-sm font-medium">Quantity</span>
+                                  <span className={`${item.quantity <= (item.reorder_level || 0) ? 'text-red-600 font-medium' : ''}`}>
                                     {item.quantity} {item.unit || ''}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-muted-foreground">Reorder Level:</span>
+                                <div className="flex justify-between items-center py-1 border-b">
+                                  <span className="text-sm font-medium">Reorder Level</span>
                                   <span>{item.reorder_level || '-'}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span className="text-sm text-muted-foreground">Location:</span>
+                                <div className="flex justify-between items-center py-1">
+                                  <span className="text-sm font-medium">Location</span>
                                   <span>{item.location || '-'}</span>
                                 </div>
                               </div>
@@ -582,34 +584,38 @@ const Inventory = () => {
                     </div>
                     
                     {/* Desktop view - table */}
-                    <div className="hidden sm:block">
-                      <Table>
+                    <div className="hidden sm:block overflow-x-auto">
+                      <Table className="border-collapse w-full">
                         <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Quantity</TableHead>
-                            <TableHead>Reorder Level</TableHead>
-                            <TableHead>Location</TableHead>
-                            <TableHead>Actions</TableHead>
+                          <TableRow className="bg-muted/50 hover:bg-muted/50">
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Name</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Category</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Quantity</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Reorder Level</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Location</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {currentItems.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell className="font-medium">{item.name}</TableCell>
-                              <TableCell>{item.category || '-'}</TableCell>
-                              <TableCell className={item.quantity <= (item.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
+                            <TableRow 
+                              key={item.id} 
+                              className="hover:bg-muted/30 transition-colors"
+                            >
+                              <TableCell className="font-medium border px-4 py-3">{item.name}</TableCell>
+                              <TableCell className="border px-4 py-3">{item.category || '-'}</TableCell>
+                              <TableCell className={`border px-4 py-3 ${item.quantity <= (item.reorder_level || 0) ? 'text-red-600 font-medium' : ''}`}>
                                 {item.quantity} {item.unit || ''}
                               </TableCell>
-                              <TableCell>{item.reorder_level || '-'}</TableCell>
-                              <TableCell>{item.location || '-'}</TableCell>
-                              <TableCell>
+                              <TableCell className="border px-4 py-3">{item.reorder_level || '-'}</TableCell>
+                              <TableCell className="border px-4 py-3">{item.location || '-'}</TableCell>
+                              <TableCell className="border px-4 py-3">
                                 <div className="flex items-center gap-2">
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => openEditDialog(item)}
+                                    className="h-8 w-8 p-0"
                                   >
                                     <Pencil className="h-4 w-4" />
                                   </Button>
@@ -617,8 +623,9 @@ const Inventory = () => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleDeleteItem(item.id)}
+                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
                                   >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                    <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </TableCell>
@@ -629,8 +636,8 @@ const Inventory = () => {
                     </div>
                     
                     {/* Pagination */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t gap-4">
-                      <div className="text-sm text-muted-foreground order-2 sm:order-1">
+                    <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t gap-4 bg-muted/10">
+                      <div className="text-sm text-muted-foreground order-2 sm:order-1 font-medium">
                         Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredItems.length)} of {filteredItems.length} items
                       </div>
                       <div className="flex items-center space-x-2 order-1 sm:order-2">
@@ -639,6 +646,7 @@ const Inventory = () => {
                           size="sm"
                           onClick={prevPage}
                           disabled={currentPage === 1}
+                          className="h-8 w-8 p-0 border-muted-foreground/30"
                         >
                           <ChevronLeft className="h-4 w-4" />
                           <span className="sr-only">Previous</span>
@@ -662,7 +670,7 @@ const Inventory = () => {
                                 variant={currentPage === pageNum ? "default" : "outline"}
                                 size="sm"
                                 onClick={() => paginate(pageNum)}
-                                className="w-8 h-8 p-0"
+                                className={`w-8 h-8 p-0 ${currentPage !== pageNum ? 'border-muted-foreground/30' : ''}`}
                               >
                                 {pageNum}
                               </Button>
@@ -674,6 +682,7 @@ const Inventory = () => {
                           size="sm"
                           onClick={nextPage}
                           disabled={currentPage === totalPages}
+                          className="h-8 w-8 p-0 border-muted-foreground/30"
                         >
                           <ChevronRight className="h-4 w-4" />
                           <span className="sr-only">Next</span>
@@ -705,38 +714,88 @@ const Inventory = () => {
                     <p className="text-muted-foreground">All your inventory items are above their reorder levels</p>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Reorder Level</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {lowStockItems.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.name}</TableCell>
-                          <TableCell>{item.category || '-'}</TableCell>
-                          <TableCell className="text-red-600 font-medium">
-                            {item.quantity} {item.unit || ''}
-                          </TableCell>
-                          <TableCell>{item.reorder_level}</TableCell>
-                          <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openEditDialog(item)}
+                  <>
+                    {/* Mobile view - cards */}
+                    <div className="sm:hidden">
+                      <div className="space-y-4 p-3">
+                        {lowStockItems.map((item) => (
+                          <Card key={item.id} className="overflow-hidden shadow-sm hover:shadow transition-all border-muted/60">
+                            <CardContent className="p-0">
+                              <div className="p-4 bg-red-50">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h3 className="font-semibold text-base">{item.name}</h3>
+                                    <p className="text-sm text-muted-foreground">{item.category || 'No category'}</p>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => openEditDialog(item)}
+                                      className="text-xs"
+                                    >
+                                      Update Stock
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="p-4 space-y-3 bg-white">
+                                <div className="flex justify-between items-center py-1 border-b">
+                                  <span className="text-sm font-medium">Quantity</span>
+                                  <span className="text-red-600 font-medium">
+                                    {item.quantity} {item.unit || ''}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center py-1">
+                                  <span className="text-sm font-medium">Reorder Level</span>
+                                  <span>{item.reorder_level}</span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Desktop view - table */}
+                    <div className="hidden sm:block overflow-x-auto">
+                      <Table className="border-collapse w-full">
+                        <TableHeader>
+                          <TableRow className="bg-muted/50 hover:bg-muted/50">
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Name</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Category</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Quantity</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Reorder Level</TableHead>
+                            <TableHead className="font-medium text-muted-foreground border px-4 py-3 text-left">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {lowStockItems.map((item) => (
+                            <TableRow 
+                              key={item.id}
+                              className="hover:bg-muted/30 transition-colors"
                             >
-                              Update Stock
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                              <TableCell className="font-medium border px-4 py-3">{item.name}</TableCell>
+                              <TableCell className="border px-4 py-3">{item.category || '-'}</TableCell>
+                              <TableCell className="text-red-600 font-medium border px-4 py-3">
+                                {item.quantity} {item.unit || ''}
+                              </TableCell>
+                              <TableCell className="border px-4 py-3">{item.reorder_level}</TableCell>
+                              <TableCell className="border px-4 py-3">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openEditDialog(item)}
+                                >
+                                  Update Stock
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
