@@ -11,7 +11,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
-import { Check, X, CalendarPlus, Loader2, UserPlus, User, Video } from 'lucide-react';
+import { Check, X, CalendarPlus, Loader2, UserPlus, User, Video, Clock, Calendar, FileText } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface BookingRequest {
   id: string;
@@ -361,64 +369,80 @@ const PendingBookings = ({ onRefreshNeeded }: PendingBookingsProps) => {
               <p>No pending booking requests</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {bookingRequests.map((request) => (
-                <div key={request.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-medium">
+            <div className="overflow-x-auto">
+              <Table className="border">
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead className="w-[150px]">Name</TableHead>
+                    <TableHead className="w-[180px]">Email</TableHead>
+                    <TableHead className="w-[120px]">Phone</TableHead>
+                    <TableHead className="w-[100px]">Date</TableHead>
+                    <TableHead className="w-[100px]">Time</TableHead>
+                    <TableHead className="w-[150px]">Reason</TableHead>
+                    <TableHead className="w-[100px] text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bookingRequests.map((request) => (
+                    <TableRow key={request.id} className="hover:bg-muted/30">
+                      <TableCell className="font-medium">
                         {request.first_name} {request.last_name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {request.email} • {request.phone}
-                      </p>
-                    </div>
-                    <Badge>Pending</Badge>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div>
-                      <p className="text-xs font-medium">Date</p>
-                      <p className="text-sm">{format(parseISO(request.date), 'MMM d, yyyy')}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium">Time</p>
-                      <p className="text-sm flex items-center">
-                        {formatTime(request.start_time)} - {formatTime(request.end_time)}
-                        {request.is_virtual && (
-                          <Badge variant="outline" className="ml-2 flex items-center gap-1 text-xs">
-                            <Video className="h-3 w-3" />
-                            Virtual
-                          </Badge>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {request.reason && (
-                    <div className="mb-3">
-                      <p className="text-xs font-medium">Reason</p>
-                      <p className="text-sm">{request.reason}</p>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-end gap-2 mt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRejectBooking(request.id)}
-                    >
-                      <X className="h-4 w-4 mr-1" /> Reject
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => openConfirmDialog(request)}
-                    >
-                      <Check className="h-4 w-4 mr-1" /> Confirm
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {request.email}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {request.phone}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-sm">{format(parseISO(request.date), 'MMM d, yyyy')}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-sm">{formatTime(request.start_time)}</span>
+                          {request.is_virtual && (
+                            <Badge variant="outline" className="ml-1 flex items-center gap-1 text-xs">
+                              <Video className="h-3 w-3" />
+                              Virtual
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-start gap-1">
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                          <span className="line-clamp-1 text-sm">{request.reason || 'Not specified'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleRejectBooking(request.id)}
+                            title="Reject"
+                          >
+                            <X className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => openConfirmDialog(request)}
+                            title="Confirm"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
