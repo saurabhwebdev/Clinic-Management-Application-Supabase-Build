@@ -571,36 +571,40 @@ const Reports = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-6 max-w-7xl">
+      <div className="container mx-auto px-4 py-4 sm:py-6 max-w-7xl">
         <div className="mb-4">
-          <h1 className="text-3xl font-bold">Reports</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Reports</h1>
           <p className="text-gray-500 mt-1">Generate and export clinic reports</p>
         </div>
         
         <Tabs defaultValue="patients" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="patients" className="flex items-center gap-2">
-              <Users size={16} />
-              <span>Patients</span>
-            </TabsTrigger>
-            <TabsTrigger value="appointments" className="flex items-center gap-2">
-              <Calendar size={16} />
-              <span>Appointments</span>
-            </TabsTrigger>
-            <TabsTrigger value="invoices" className="flex items-center gap-2">
-              <Receipt size={16} />
-              <span>Invoices</span>
-            </TabsTrigger>
-            <TabsTrigger value="inventory" className="flex items-center gap-2">
-              <Package size={16} />
-              <span>Inventory</span>
-            </TabsTrigger>
-          </TabsList>
+          <div className="sticky top-0 bg-background z-10 pb-4">
+            <TabsList className="w-full overflow-x-auto flex flex-nowrap">
+              <TabsTrigger value="patients" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Users size={16} className="hidden sm:inline" />
+                <span>Patients</span>
+              </TabsTrigger>
+              <TabsTrigger value="appointments" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Calendar size={16} className="hidden sm:inline" />
+                <span>Appointments</span>
+              </TabsTrigger>
+              <TabsTrigger value="invoices" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Receipt size={16} className="hidden sm:inline" />
+                <span>Invoices</span>
+              </TabsTrigger>
+              <TabsTrigger value="inventory" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Package size={16} className="hidden sm:inline" />
+                <span>Inventory</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <div className="mt-10">
           
           {/* Patients Report Tab */}
           <TabsContent value="patients">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="shadow-sm">
+              <Card className="shadow-sm col-span-1 md:col-span-2 lg:col-span-1">
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Users size={16} />
@@ -613,20 +617,20 @@ const Reports = () => {
                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
                   ) : (
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <span className="text-xs text-gray-500">{patientData.length} patients</span>
                       <Button 
                         onClick={generatePatientReport} 
                         disabled={isGenerating || patientData.length === 0}
                         size="sm"
-                        className="h-8"
+                        className="h-8 w-full sm:w-auto"
                       >
                         {isGenerating ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                          <FileText size={14} />
+                          <FileText size={14} className="mr-1" />
                         )}
-                        <span className="ml-1">Export</span>
+                        <span>Export</span>
                       </Button>
                     </div>
                   )}
@@ -638,7 +642,7 @@ const Reports = () => {
           {/* Appointments Report Tab */}
           <TabsContent value="appointments">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="shadow-sm">
+              <Card className="shadow-sm col-span-1 md:col-span-2 lg:col-span-1">
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Calendar size={16} />
@@ -651,20 +655,20 @@ const Reports = () => {
                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
                   ) : (
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <span className="text-xs text-gray-500">{appointmentData.length} appointments</span>
                       <Button 
                         onClick={generateAppointmentReport} 
                         disabled={isGenerating || appointmentData.length === 0}
                         size="sm"
-                        className="h-8"
+                        className="h-8 w-full sm:w-auto"
                       >
                         {isGenerating ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                          <FileText size={14} />
+                          <FileText size={14} className="mr-1" />
                         )}
-                        <span className="ml-1">Export</span>
+                        <span>Export</span>
                       </Button>
                     </div>
                   )}
@@ -676,7 +680,7 @@ const Reports = () => {
           {/* Invoices Report Tab */}
           <TabsContent value="invoices">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="shadow-sm">
+              <Card className="shadow-sm col-span-1 md:col-span-2 lg:col-span-1">
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Receipt size={16} />
@@ -689,20 +693,20 @@ const Reports = () => {
                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
                   ) : (
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <span className="text-xs text-gray-500">{invoiceData.length} invoices</span>
                       <Button 
                         onClick={generateInvoiceReport} 
                         disabled={isGenerating || invoiceData.length === 0}
                         size="sm"
-                        className="h-8"
+                        className="h-8 w-full sm:w-auto"
                       >
                         {isGenerating ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                          <FileText size={14} />
+                          <FileText size={14} className="mr-1" />
                         )}
-                        <span className="ml-1">Export</span>
+                        <span>Export</span>
                       </Button>
                     </div>
                   )}
@@ -714,7 +718,7 @@ const Reports = () => {
           {/* Inventory Report Tab */}
           <TabsContent value="inventory">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="shadow-sm">
+              <Card className="shadow-sm col-span-1 md:col-span-2 lg:col-span-1">
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Package size={16} />
@@ -727,20 +731,20 @@ const Reports = () => {
                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
                   ) : (
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <span className="text-xs text-gray-500">{inventoryData.length} items</span>
                       <Button 
                         onClick={generateInventoryReport} 
                         disabled={isGenerating || inventoryData.length === 0}
                         size="sm"
-                        className="h-8"
+                        className="h-8 w-full sm:w-auto"
                       >
                         {isGenerating ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                          <FileText size={14} />
+                          <FileText size={14} className="mr-1" />
                         )}
-                        <span className="ml-1">Export</span>
+                        <span>Export</span>
                       </Button>
                     </div>
                   )}
@@ -748,6 +752,7 @@ const Reports = () => {
               </Card>
             </div>
           </TabsContent>
+          </div>
         </Tabs>
       </div>
     </Layout>

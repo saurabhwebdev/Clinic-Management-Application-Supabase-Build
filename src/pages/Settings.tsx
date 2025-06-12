@@ -583,8 +583,8 @@ const Settings = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-6">Settings</h1>
+      <div className="container mx-auto px-4 py-4 sm:py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Settings</h1>
         
         {isInitialLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -593,106 +593,37 @@ const Settings = () => {
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6 mb-8">
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="clinic">Clinic</TabsTrigger>
-              <TabsTrigger value="doctor">Doctor Details</TabsTrigger>
-              <TabsTrigger value="region">Region</TabsTrigger>
-              <TabsTrigger value="booking">Public Booking</TabsTrigger>
-              <TabsTrigger value="email">Email</TabsTrigger>
-            </TabsList>
+            <div className="sticky top-0 bg-background z-10 pb-6">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1">
+                <TabsTrigger value="profile" className="text-xs sm:text-sm py-2">Profile</TabsTrigger>
+                <TabsTrigger value="clinic" className="text-xs sm:text-sm py-2">Clinic</TabsTrigger>
+                <TabsTrigger value="doctor" className="text-xs sm:text-sm py-2">Doctor Details</TabsTrigger>
+                <TabsTrigger value="region" className="text-xs sm:text-sm py-2">Region</TabsTrigger>
+                <TabsTrigger value="booking" className="text-xs sm:text-sm py-2">Public Booking</TabsTrigger>
+                <TabsTrigger value="email" className="text-xs sm:text-sm py-2">Email</TabsTrigger>
+              </TabsList>
+            </div>
             
-            <TabsContent value="profile">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile Settings</CardTitle>
-                  <CardDescription>
-                    Manage your personal information and account settings.
-                  </CardDescription>
-                </CardHeader>
-                <form onSubmit={saveProfileData}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name</Label>
-                      <Input
-                        id="fullName"
-                        name="fullName"
-                        placeholder="Enter your full name"
-                        value={profileData.fullName}
-                        onChange={handleProfileChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={profileData.email}
-                        onChange={handleProfileChange}
-                        disabled={true}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        placeholder="Enter your phone number"
-                        value={profileData.phone}
-                        onChange={handleProfileChange}
-                      />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" disabled={loading.profile}>
-                      {loading.profile ? "Saving..." : "Save Changes"}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="clinic">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Clinic Settings</CardTitle>
-                  <CardDescription>
-                    Manage your clinic's information and settings.
-                  </CardDescription>
-                </CardHeader>
-                <form onSubmit={saveClinicData}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="clinicName">Clinic Name</Label>
-                      <Input
-                        id="clinicName"
-                        name="clinicName"
-                        placeholder="Enter clinic name"
-                        value={clinicData.clinicName}
-                        onChange={handleClinicChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
-                      <Textarea
-                        id="address"
-                        name="address"
-                        placeholder="Enter clinic address"
-                        value={clinicData.address}
-                        onChange={handleClinicChange}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-16">
+              <TabsContent value="profile">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Profile Settings</CardTitle>
+                    <CardDescription>
+                      Manage your personal information and account settings.
+                    </CardDescription>
+                  </CardHeader>
+                  <form onSubmit={saveProfileData}>
+                    <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Phone</Label>
+                        <Label htmlFor="fullName">Full Name</Label>
                         <Input
-                          id="phone"
-                          name="phone"
-                          placeholder="Enter clinic phone"
-                          value={clinicData.phone}
-                          onChange={handleClinicChange}
+                          id="fullName"
+                          name="fullName"
+                          placeholder="Enter your full name"
+                          value={profileData.fullName}
+                          onChange={handleProfileChange}
+                          className="w-full"
                         />
                       </div>
                       <div className="space-y-2">
@@ -701,378 +632,511 @@ const Settings = () => {
                           id="email"
                           name="email"
                           type="email"
-                          placeholder="Enter clinic email"
-                          value={clinicData.email}
+                          placeholder="Enter your email"
+                          value={profileData.email}
+                          onChange={handleProfileChange}
+                          disabled={true}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone</Label>
+                        <Input
+                          id="phone"
+                          name="phone"
+                          placeholder="Enter your phone number"
+                          value={profileData.phone}
+                          onChange={handleProfileChange}
+                          className="w-full"
+                        />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex flex-col sm:flex-row sm:justify-end">
+                      <Button 
+                        type="submit" 
+                        disabled={loading.profile}
+                        className="w-full sm:w-auto"
+                      >
+                        {loading.profile ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : "Save Changes"}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="clinic">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Clinic Settings</CardTitle>
+                    <CardDescription>
+                      Manage your clinic's information and settings.
+                    </CardDescription>
+                  </CardHeader>
+                  <form onSubmit={saveClinicData}>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="clinicName">Clinic Name</Label>
+                        <Input
+                          id="clinicName"
+                          name="clinicName"
+                          placeholder="Enter clinic name"
+                          value={clinicData.clinicName}
                           onChange={handleClinicChange}
+                          className="w-full"
                         />
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="openingHours">Opening Hours</Label>
-                      <Textarea
-                        id="openingHours"
-                        name="openingHours"
-                        placeholder="E.g., Mon-Fri: 9am-5pm, Sat: 10am-2pm"
-                        value={clinicData.openingHours}
-                        onChange={handleClinicChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        name="description"
-                        placeholder="Enter a brief description of your clinic"
-                        value={clinicData.description}
-                        onChange={handleClinicChange}
-                      />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" disabled={loading.clinic}>
-                      {loading.clinic ? "Saving..." : "Save Changes"}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
+                      <div className="space-y-2">
+                        <Label htmlFor="address">Address</Label>
+                        <Textarea
+                          id="address"
+                          name="address"
+                          placeholder="Enter clinic address"
+                          value={clinicData.address}
+                          onChange={handleClinicChange}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Phone</Label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            placeholder="Enter clinic phone"
+                            value={clinicData.phone}
+                            onChange={handleClinicChange}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="Enter clinic email"
+                            value={clinicData.email}
+                            onChange={handleClinicChange}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="openingHours">Opening Hours</Label>
+                        <Textarea
+                          id="openingHours"
+                          name="openingHours"
+                          placeholder="E.g., Mon-Fri: 9am-5pm, Sat: 10am-2pm"
+                          value={clinicData.openingHours}
+                          onChange={handleClinicChange}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          name="description"
+                          placeholder="Enter a brief description of your clinic"
+                          value={clinicData.description}
+                          onChange={handleClinicChange}
+                          className="w-full"
+                        />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex flex-col sm:flex-row sm:justify-end">
+                      <Button 
+                        type="submit" 
+                        disabled={loading.clinic}
+                        className="w-full sm:w-auto"
+                      >
+                        {loading.clinic ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : "Save Changes"}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
+              </TabsContent>
 
-            <TabsContent value="doctor">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Doctor Details</CardTitle>
-                  <CardDescription>
-                    Manage your professional information and digital signature.
-                  </CardDescription>
-                </CardHeader>
-                <form onSubmit={saveDoctorData}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="doctorFullName">Full Name</Label>
-                      <Input
-                        id="doctorFullName"
-                        name="fullName"
-                        placeholder="Enter your full name"
-                        value={doctorData.fullName}
-                        onChange={handleDoctorChange}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TabsContent value="doctor">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Doctor Details</CardTitle>
+                    <CardDescription>
+                      Manage your professional information and digital signature.
+                    </CardDescription>
+                  </CardHeader>
+                  <form onSubmit={saveDoctorData}>
+                    <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="specialization">Specialization</Label>
+                        <Label htmlFor="doctorFullName">Full Name</Label>
                         <Input
-                          id="specialization"
-                          name="specialization"
-                          placeholder="E.g., Cardiology, Pediatrics"
-                          value={doctorData.specialization}
+                          id="doctorFullName"
+                          name="fullName"
+                          placeholder="Enter your full name"
+                          value={doctorData.fullName}
                           onChange={handleDoctorChange}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="specialization">Specialization</Label>
+                          <Input
+                            id="specialization"
+                            name="specialization"
+                            placeholder="E.g., Cardiology, Pediatrics"
+                            value={doctorData.specialization}
+                            onChange={handleDoctorChange}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="qualification">Qualification</Label>
+                          <Input
+                            id="qualification"
+                            name="qualification"
+                            placeholder="E.g., MBBS, MD"
+                            value={doctorData.qualification}
+                            onChange={handleDoctorChange}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="licenseNumber">License Number</Label>
+                          <Input
+                            id="licenseNumber"
+                            name="licenseNumber"
+                            placeholder="Enter your medical license number"
+                            value={doctorData.licenseNumber}
+                            onChange={handleDoctorChange}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="contactNumber">Contact Number</Label>
+                          <Input
+                            id="contactNumber"
+                            name="contactNumber"
+                            placeholder="Enter your contact number"
+                            value={doctorData.contactNumber}
+                            onChange={handleDoctorChange}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="doctorEmail">Email</Label>
+                        <Input
+                          id="doctorEmail"
+                          name="email"
+                          type="email"
+                          placeholder="Enter your professional email"
+                          value={doctorData.email}
+                          onChange={handleDoctorChange}
+                          className="w-full"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="qualification">Qualification</Label>
-                        <Input
-                          id="qualification"
-                          name="qualification"
-                          placeholder="E.g., MBBS, MD"
-                          value={doctorData.qualification}
+                        <Label htmlFor="bio">Professional Bio</Label>
+                        <Textarea
+                          id="bio"
+                          name="bio"
+                          placeholder="Enter a brief professional bio"
+                          value={doctorData.bio}
                           onChange={handleDoctorChange}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="licenseNumber">License Number</Label>
-                        <Input
-                          id="licenseNumber"
-                          name="licenseNumber"
-                          placeholder="Enter your medical license number"
-                          value={doctorData.licenseNumber}
-                          onChange={handleDoctorChange}
+                          rows={3}
+                          className="w-full"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="contactNumber">Contact Number</Label>
-                        <Input
-                          id="contactNumber"
-                          name="contactNumber"
-                          placeholder="Enter your contact number"
-                          value={doctorData.contactNumber}
-                          onChange={handleDoctorChange}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="doctorEmail">Email</Label>
-                      <Input
-                        id="doctorEmail"
-                        name="email"
-                        type="email"
-                        placeholder="Enter your professional email"
-                        value={doctorData.email}
-                        onChange={handleDoctorChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Professional Bio</Label>
-                      <Textarea
-                        id="bio"
-                        name="bio"
-                        placeholder="Enter a brief professional bio"
-                        value={doctorData.bio}
-                        onChange={handleDoctorChange}
-                        rows={3}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signature">Digital Signature</Label>
-                      <div className="border rounded-md p-4">
-                        <div className="mb-4">
-                          {doctorData.digitalSignature ? (
-                            <div className="flex flex-col items-center">
-                              <img 
-                                src={doctorData.digitalSignature} 
-                                alt="Digital Signature" 
-                                className="max-h-32 border rounded-md p-2 mb-2"
-                              />
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                onClick={clearSignature}
-                                size="sm"
-                              >
-                                Clear Signature
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="text-center p-4 border border-dashed rounded-md">
-                              <p className="text-muted-foreground mb-2">No signature added yet</p>
-                              <Input
-                                id="signatureUpload"
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    // Check file size (limit to 500KB to ensure it fits in the database)
-                                    if (file.size > 500 * 1024) {
-                                      toast({
-                                        title: "File too large",
-                                        description: "Signature image must be less than 500KB",
-                                        variant: "destructive",
-                                      });
-                                      return;
-                                    }
-                                    
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      try {
-                                        const result = reader.result as string;
-                                        console.log("File loaded, size:", result.length);
-                                        
-                                        // Validate the data URL format
-                                        if (!result.startsWith('data:image/')) {
-                                          throw new Error('Invalid image format');
-                                        }
-                                        
-                                        handleSignatureChange(result);
-                                        
+                        <Label htmlFor="signature">Digital Signature</Label>
+                        <div className="border rounded-md p-4">
+                          <div className="mb-4">
+                            {doctorData.digitalSignature ? (
+                              <div className="flex flex-col items-center">
+                                <img 
+                                  src={doctorData.digitalSignature} 
+                                  alt="Digital Signature" 
+                                  className="max-h-32 border rounded-md p-2 mb-2"
+                                />
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  onClick={clearSignature}
+                                  size="sm"
+                                  className="w-full sm:w-auto"
+                                >
+                                  Clear Signature
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="text-center p-2 sm:p-4 border border-dashed rounded-md">
+                                <p className="text-muted-foreground mb-2 text-sm">No signature added yet</p>
+                                <Input
+                                  id="signatureUpload"
+                                  type="file"
+                                  accept="image/*"
+                                  className="w-full"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      // Check file size (limit to 500KB to ensure it fits in the database)
+                                      if (file.size > 500 * 1024) {
                                         toast({
-                                          title: "Signature uploaded",
-                                          description: "Don't forget to save your changes",
-                                        });
-                                      } catch (error) {
-                                        console.error("Error processing signature:", error);
-                                        toast({
-                                          title: "Error",
-                                          description: "Failed to process signature image. Please try another image.",
+                                          title: "File too large",
+                                          description: "Signature image must be less than 500KB",
                                           variant: "destructive",
                                         });
+                                        return;
                                       }
-                                    };
-                                    
-                                    reader.onerror = () => {
-                                      toast({
-                                        title: "Error",
-                                        description: "Failed to read the image file. Please try again.",
-                                        variant: "destructive",
-                                      });
-                                    };
-                                    
-                                    reader.readAsDataURL(file);
-                                  }
-                                }}
-                              />
-                              <p className="text-xs text-muted-foreground mt-2">
-                                Upload a small image file (max 500KB). PNG or JPEG recommended.
-                              </p>
-                            </div>
-                          )}
+                                      
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        try {
+                                          const result = reader.result as string;
+                                          console.log("File loaded, size:", result.length);
+                                          
+                                          // Validate the data URL format
+                                          if (!result.startsWith('data:image/')) {
+                                            throw new Error('Invalid image format');
+                                          }
+                                          
+                                          handleSignatureChange(result);
+                                          
+                                          toast({
+                                            title: "Signature uploaded",
+                                            description: "Don't forget to save your changes",
+                                          });
+                                        } catch (error) {
+                                          console.error("Error processing signature:", error);
+                                          toast({
+                                            title: "Error",
+                                            description: "Failed to process signature image. Please try another image.",
+                                            variant: "destructive",
+                                          });
+                                        }
+                                      };
+                                      
+                                      reader.onerror = () => {
+                                        toast({
+                                          title: "Error",
+                                          description: "Failed to read the image file. Please try again.",
+                                          variant: "destructive",
+                                        });
+                                      };
+                                      
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                />
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  Upload a small image file (max 500KB). PNG or JPEG recommended.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Upload an image of your signature. This will appear on prescriptions and other documents.
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Upload an image of your signature. This will appear on prescriptions and other documents.
-                        </p>
                       </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" disabled={loading.doctor}>
-                      {loading.doctor ? "Saving..." : "Save Changes"}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="region">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Region Settings</CardTitle>
-                  <CardDescription>
-                    Select your region and currency for invoices and other financial documents.
-                  </CardDescription>
-                </CardHeader>
-                <form onSubmit={saveRegionData}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="region">Region</Label>
-                      <Select
-                        value={selectedRegionId}
-                        onValueChange={handleRegionChange}
+                    </CardContent>
+                    <CardFooter className="flex flex-col sm:flex-row sm:justify-end">
+                      <Button 
+                        type="submit" 
+                        disabled={loading.doctor}
+                        className="w-full sm:w-auto"
                       >
-                        <SelectTrigger id="region">
-                          <SelectValue placeholder="Select your region" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {regions.length === 0 ? (
-                            <div className="p-2 text-center text-sm text-muted-foreground">No regions available</div>
-                          ) : (
-                            regions.map((region) => (
-                              <SelectItem key={region.id} value={region.id}>
-                                {region.name} ({region.currency_code} - {region.currency_symbol})
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {selectedRegion && (
-                      <div className="mt-6 p-4 bg-muted/50 rounded-md">
-                        <h3 className="font-medium mb-2">Selected Currency</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <p className="text-sm font-medium">Currency Code:</p>
-                            <p className="text-sm">{selectedRegion.currency_code}</p>
+                        {loading.doctor ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : "Save Changes"}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="region">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Region Settings</CardTitle>
+                    <CardDescription>
+                      Select your region and currency for invoices and other financial documents.
+                    </CardDescription>
+                  </CardHeader>
+                  <form onSubmit={saveRegionData}>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="region">Region</Label>
+                        <Select
+                          value={selectedRegionId}
+                          onValueChange={handleRegionChange}
+                        >
+                          <SelectTrigger id="region" className="w-full">
+                            <SelectValue placeholder="Select your region" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {regions.length === 0 ? (
+                              <div className="p-2 text-center text-sm text-muted-foreground">No regions available</div>
+                            ) : (
+                              regions.map((region) => (
+                                <SelectItem key={region.id} value={region.id}>
+                                  {region.name} ({region.currency_code} - {region.currency_symbol})
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {selectedRegion && (
+                        <div className="mt-6 p-3 sm:p-4 bg-muted/50 rounded-md">
+                          <h3 className="font-medium mb-2 text-sm sm:text-base">Selected Currency</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                              <p className="text-xs sm:text-sm font-medium">Currency Code:</p>
+                              <p className="text-xs sm:text-sm">{selectedRegion.currency_code}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs sm:text-sm font-medium">Currency Symbol:</p>
+                              <p className="text-xs sm:text-sm">{selectedRegion.currency_symbol}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium">Currency Symbol:</p>
-                            <p className="text-sm">{selectedRegion.currency_symbol}</p>
-                          </div>
+                          <p className="text-xs text-muted-foreground mt-4">
+                            This currency will be used for all invoices and financial documents.
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-4">
-                          This currency will be used for all invoices and financial documents.
-                        </p>
-                      </div>
-                    )}
-                    
-                    {/* Region-specific financial settings */}
-                    {selectedRegionId && user && (
-                      <div className="mt-8 border-t pt-6">
-                        <RegionalSettings 
-                          userId={user.id} 
-                          regionId={selectedRegionId} 
-                          region={selectedRegion}
-                          ref={regionalSettingsRef}
+                      )}
+                      
+                      {/* Region-specific financial settings */}
+                      {selectedRegionId && user && (
+                        <div className="mt-6 sm:mt-8 border-t pt-4 sm:pt-6">
+                          <RegionalSettings 
+                            userId={user.id} 
+                            regionId={selectedRegionId} 
+                            region={selectedRegion}
+                            ref={regionalSettingsRef}
+                          />
+                        </div>
+                      )}
+                    </CardContent>
+                    <CardFooter className="flex flex-col sm:flex-row sm:justify-end">
+                      <Button 
+                        type="submit" 
+                        disabled={loading.region || !selectedRegionId}
+                        className="w-full"
+                      >
+                        {loading.region ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : "Save All Settings"}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="booking">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Public Booking Page</CardTitle>
+                    <CardDescription>
+                      Configure your public booking page for patients to schedule appointments online.
+                    </CardDescription>
+                  </CardHeader>
+                  <form onSubmit={savePublicBookingSettings}>
+                    <CardContent className="space-y-4 sm:space-y-6">
+                      {clinicData.clinicName ? (
+                        <PublicBookingSettings
+                          userId={user?.id || ''}
+                          clinicId={clinicData.clinicId || ''}
+                          clinicName={clinicData.clinicName}
+                          ref={publicBookingSettingsRef}
                         />
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      type="submit" 
-                      disabled={loading.region || !selectedRegionId}
-                      className="w-full"
-                    >
-                      {loading.region ? "Saving..." : "Save All Settings"}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="booking">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Public Booking Page</CardTitle>
-                  <CardDescription>
-                    Configure your public booking page for patients to schedule appointments online.
-                  </CardDescription>
-                </CardHeader>
-                <form onSubmit={savePublicBookingSettings}>
-                  <CardContent className="space-y-6">
-                    {clinicData.clinicName ? (
-                      <PublicBookingSettings
-                        userId={user?.id || ''}
-                        clinicId={clinicData.clinicId || ''}
-                        clinicName={clinicData.clinicName}
-                        ref={publicBookingSettingsRef}
-                      />
-                    ) : (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                        <p className="text-yellow-800">
-                          Please set up your clinic information in the Clinic tab before configuring public booking.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      type="submit" 
-                      disabled={loading.publicBooking || !clinicData.clinicName}
-                      className="w-full"
-                    >
-                      {loading.publicBooking ? "Saving..." : "Save Settings"}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="email">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Email Settings</CardTitle>
-                  <CardDescription>
-                    Configure email notifications for appointments, invoices, and other communications.
-                  </CardDescription>
-                </CardHeader>
-                <form onSubmit={saveEmailSettings}>
-                  <CardContent className="space-y-6">
-                    {user?.id ? (
-                      <EmailSettings
-                        userId={user.id}
-                        ref={emailSettingsRef}
-                      />
-                    ) : (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                        <p className="text-yellow-800">
-                          Please sign in to configure email settings.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      type="submit" 
-                      disabled={loading.email || !user?.id}
-                      className="w-full"
-                    >
-                      {loading.email ? "Saving..." : "Save Settings"}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
+                      ) : (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 sm:p-4">
+                          <p className="text-yellow-800 text-sm">
+                            Please set up your clinic information in the Clinic tab before configuring public booking.
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                    <CardFooter className="flex flex-col sm:flex-row sm:justify-end">
+                      <Button 
+                        type="submit" 
+                        disabled={loading.publicBooking || !clinicData.clinicName}
+                        className="w-full"
+                      >
+                        {loading.publicBooking ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : "Save Settings"}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="email">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Email Settings</CardTitle>
+                    <CardDescription>
+                      Configure email notifications for appointments, invoices, and other communications.
+                    </CardDescription>
+                  </CardHeader>
+                  <form onSubmit={saveEmailSettings}>
+                    <CardContent className="space-y-4 sm:space-y-6">
+                      {user?.id ? (
+                        <EmailSettings
+                          userId={user.id}
+                          ref={emailSettingsRef}
+                        />
+                      ) : (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 sm:p-4">
+                          <p className="text-yellow-800 text-sm">
+                            Please sign in to configure email settings.
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                    <CardFooter className="flex flex-col sm:flex-row sm:justify-end">
+                      <Button 
+                        type="submit" 
+                        disabled={loading.email || !user?.id}
+                        className="w-full"
+                      >
+                        {loading.email ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : "Save Settings"}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
+              </TabsContent>
+            </div>
           </Tabs>
         )}
       </div>
