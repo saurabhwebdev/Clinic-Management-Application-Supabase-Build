@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PatientHelp } from '@/components/help';
+import { PatientHelp, AppointmentHelp } from '@/components/help';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 
@@ -42,7 +42,6 @@ const Help = () => {
                     variant={activeTab === "appointments" ? "default" : "ghost"} 
                     className="w-full justify-start"
                     onClick={() => setActiveTab("appointments")}
-                    disabled
                   >
                     Appointments
                   </Button>
@@ -120,7 +119,10 @@ const Help = () => {
                       </ul>
                     </div>
                     
-                    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                    <div 
+                      className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
+                      onClick={() => setActiveTab("appointments")}
+                    >
                       <h3 className="text-xl font-semibold mb-4">Appointments</h3>
                       <p className="text-gray-600 mb-4">Everything you need to know about managing appointments.</p>
                       <ul className="space-y-2 text-gray-700">
@@ -155,13 +157,9 @@ const Help = () => {
 
               {activeTab === "patients" && <PatientHelp />}
               
+              {activeTab === "appointments" && <AppointmentHelp />}
+              
               {/* Other module help content will be conditionally rendered here */}
-              {activeTab === "appointments" && (
-                <div className="p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
-                  <p className="text-gray-500">Appointments help content coming soon.</p>
-                </div>
-              )}
-
               {activeTab === "prescriptions" && (
                 <div className="p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
                   <p className="text-gray-500">Prescriptions help content coming soon.</p>
