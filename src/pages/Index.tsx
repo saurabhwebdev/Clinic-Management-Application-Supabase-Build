@@ -69,9 +69,9 @@ const Index = () => {
               <div className="relative h-[500px] lg:h-[600px] rounded-2xl overflow-hidden shadow-2xl border border-gray-100">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100">
                   <img 
-                    src="/placeholder.svg" 
-                    alt="ClinicFlow Dashboard Preview" 
-                    className="w-full h-full object-cover opacity-90"
+                    src="https://images.pexels.com/photos/236380/pexels-photo-236380.jpeg?auto=compress&w=800&fit=crop" 
+                    alt="Monochrome Hospital Hallway" 
+                    className="w-full h-full object-cover opacity-90 grayscale"
                   />
                   <div className="absolute inset-0 bg-black/5"></div>
                 </div>
