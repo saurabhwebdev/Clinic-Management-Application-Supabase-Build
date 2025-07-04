@@ -60,7 +60,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
               <div className="bg-black text-white p-1.5 rounded-md">
-                <LayoutDashboard size={20} />
+                <img src="/svgicon/clinic-medical-white.svg" alt="Clinic" className="w-5 h-5" />
               </div>
               <span className="text-xl font-bold text-black">
                 ClinicFlow
@@ -180,7 +180,7 @@ const Navbar = () => {
                   <SheetHeader className="p-4 border-b">
                     <SheetTitle className="flex items-center">
                       <div className="bg-black text-white p-1.5 rounded-md mr-2">
-                        <LayoutDashboard size={20} />
+                        <img src="/svgicon/clinic-medical-white.svg" alt="Clinic" className="w-5 h-5" />
                       </div>
                       <span className="text-xl font-bold text-black">
                         ClinicFlow
