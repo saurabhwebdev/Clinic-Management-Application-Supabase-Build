@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React from 'react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
 import Layout from '@/components/Layout';
@@ -33,6 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Define inventory item interface
 interface InventoryItem {
@@ -56,8 +58,7 @@ interface InventoryItem {
 const Inventory = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -83,47 +84,30 @@ const Inventory = () => {
     location: '',
   });
 
-  // Fetch inventory items on component mount
-  useEffect(() => {
-    if (user) {
-      fetchInventoryItems();
-    }
-  }, [user]);
-
-  // Fetch inventory items from Supabase
-  const fetchInventoryItems = async () => {
-    try {
-      setLoading(true);
-      
-      if (!user) return;
-      
+  // Fetch inventory items using React Query
+  const { data: inventoryItems = [], isLoading } = useQuery({
+    queryKey: ['inventory', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from('inventory')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-      
       if (error) throw error;
-      
-      setInventoryItems(data || []);
-      
-      // Filter low stock items
-      const lowStock = data?.filter(item => 
-        item.quantity <= (item.reorder_level || 0)
-      ) || [];
-      
-      setLowStockItems(lowStock);
-    } catch (error) {
-      console.error('Error fetching inventory items:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch inventory items. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Update low stock items whenever inventoryItems changes
+  React.useEffect(() => {
+    const lowStock = inventoryItems.filter(item =>
+      item.quantity <= (item.reorder_level || 0)
+    );
+    setLowStockItems(lowStock);
+  }, [inventoryItems]);
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -145,10 +129,8 @@ const Inventory = () => {
   // Add new inventory item
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
       if (!user) return;
-      
       const { data, error } = await supabase.from('inventory').insert({
         user_id: user.id,
         name: formData.name,
@@ -165,20 +147,16 @@ const Inventory = () => {
         created_at: new Date().toISOString(),
         updated_at: null,
       }).select();
-      
       if (error) throw error;
-      
       toast({
         title: 'Success',
         description: 'Inventory item added successfully',
       });
-      
       // Reset form and close dialog
       resetForm();
       setIsAddDialogOpen(false);
-      
-      // Refresh inventory list
-      fetchInventoryItems();
+      // Invalidate and refetch inventory query
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
     } catch (error) {
       console.error('Error adding inventory item:', error);
       toast({
@@ -192,10 +170,8 @@ const Inventory = () => {
   // Edit inventory item
   const handleEditItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
       if (!currentItem) return;
-      
       const { error } = await supabase
         .from('inventory')
         .update({
@@ -213,20 +189,16 @@ const Inventory = () => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', currentItem.id);
-      
       if (error) throw error;
-      
       toast({
         title: 'Success',
         description: 'Inventory item updated successfully',
       });
-      
       // Reset form and close dialog
       resetForm();
       setIsEditDialogOpen(false);
-      
-      // Refresh inventory list
-      fetchInventoryItems();
+      // Invalidate and refetch inventory query
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
     } catch (error) {
       console.error('Error updating inventory item:', error);
       toast({
@@ -244,16 +216,13 @@ const Inventory = () => {
         .from('inventory')
         .delete()
         .eq('id', itemId);
-      
       if (error) throw error;
-      
       toast({
         title: 'Success',
         description: 'Inventory item deleted successfully',
       });
-      
-      // Refresh inventory list
-      fetchInventoryItems();
+      // Invalidate and refetch inventory query
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
     } catch (error) {
       console.error('Error deleting inventory item:', error);
       toast({
@@ -521,7 +490,7 @@ const Inventory = () => {
           <TabsContent value="all" className="mt-4">
             <Card>
               <CardContent className="p-0">
-                {loading ? (
+                {isLoading ? (
                   <div className="flex justify-center items-center h-64">
                     <p>Loading inventory items...</p>
                   </div>
@@ -716,7 +685,7 @@ const Inventory = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                {loading ? (
+                {isLoading ? (
                   <div className="flex justify-center items-center h-64">
                     <p>Loading low stock items...</p>
                   </div>
