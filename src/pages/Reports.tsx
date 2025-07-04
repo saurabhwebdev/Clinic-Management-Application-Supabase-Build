@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import autoTable from 'jspdf-autotable';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { useQuery } from '@tanstack/react-query';
 
 // Extend jsPDF with autoTable
 declare module 'jspdf' {
@@ -83,70 +84,29 @@ const Reports = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isLoading, setIsLoading] = useState({
-    patients: true,
-    appointments: true,
-    invoices: true,
-    inventory: true,
-    clinic: true
-  });
-  
-  // State for actual data
-  const [patientData, setPatientData] = useState<Patient[]>([]);
-  const [appointmentData, setAppointmentData] = useState<Appointment[]>([]);
-  const [invoiceData, setInvoiceData] = useState<Invoice[]>([]);
-  const [inventoryData, setInventoryData] = useState<InventoryItem[]>([]);
-  const [clinicInfo, setClinicInfo] = useState<ClinicInfo>({
-    clinicName: "",
-    address: "",
-    phone: "",
-    email: "",
-    openingHours: "",
-    description: ""
-  });
-  
-  // Fetch data when component mounts
-  useEffect(() => {
-    if (user) {
-      fetchPatients();
-      fetchAppointments();
-      fetchInvoices();
-      fetchInventory();
-      fetchClinicInfo();
-    }
-  }, [user]);
-  
-  // Fetch patients from Supabase
-  const fetchPatients = async () => {
-    try {
-      setIsLoading(prev => ({ ...prev, patients: true }));
-      
+
+  // Fetch patients using React Query
+  const { data: patientData = [], isLoading: isLoadingPatients } = useQuery({
+    queryKey: ['patients', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from('patients')
         .select('id, first_name, last_name, date_of_birth, gender, email, phone, created_at')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-      
       if (error) throw error;
-      
-      setPatientData(data || []);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch patient data. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(prev => ({ ...prev, patients: false }));
-    }
-  };
-  
-  // Fetch appointments from Supabase
-  const fetchAppointments = async () => {
-    try {
-      setIsLoading(prev => ({ ...prev, appointments: true }));
-      
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch appointments using React Query
+  const { data: appointmentData = [], isLoading: isLoadingAppointments } = useQuery({
+    queryKey: ['appointments', user?.id, 'reports'],
+    queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from('appointments')
         .select(`
@@ -157,17 +117,13 @@ const Reports = () => {
           status,
           patient:patients(first_name, last_name)
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('date', { ascending: true })
         .order('start_time', { ascending: true });
-      
       if (error) throw error;
-      
       // Transform data to match the Appointment interface
-      const formattedData = data?.map(item => {
-        // Handle the case where patient might be an array or object
+      return (data || []).map(item => {
         const patientData = Array.isArray(item.patient) ? item.patient[0] : item.patient;
-        
         return {
           id: item.id,
           date: item.date,
@@ -179,26 +135,17 @@ const Reports = () => {
             last_name: patientData?.last_name || ''
           }
         };
-      }) || [];
-      
-      setAppointmentData(formattedData);
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch appointment data. Please try again.',
-        variant: 'destructive',
       });
-    } finally {
-      setIsLoading(prev => ({ ...prev, appointments: false }));
-    }
-  };
-  
-  // Fetch invoices from Supabase
-  const fetchInvoices = async () => {
-    try {
-      setIsLoading(prev => ({ ...prev, invoices: true }));
-      
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch invoices using React Query
+  const { data: invoiceData = [], isLoading: isLoadingInvoices } = useQuery({
+    queryKey: ['invoices', user?.id, 'reports'],
+    queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from('invoices')
         .select(`
@@ -211,16 +158,12 @@ const Reports = () => {
           currency_symbol,
           patient:patients(first_name, last_name)
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('invoice_date', { ascending: false });
-      
       if (error) throw error;
-      
       // Transform data to match the Invoice interface
-      const formattedData = data?.map(item => {
-        // Handle the case where patient might be an array or object
+      return (data || []).map(item => {
         const patientData = Array.isArray(item.patient) ? item.patient[0] : item.patient;
-        
         return {
           id: item.id,
           invoice_number: item.invoice_number,
@@ -234,83 +177,76 @@ const Reports = () => {
             last_name: patientData?.last_name || ''
           }
         };
-      }) || [];
-      
-      setInvoiceData(formattedData);
-    } catch (error) {
-      console.error('Error fetching invoices:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch invoice data. Please try again.',
-        variant: 'destructive',
       });
-    } finally {
-      setIsLoading(prev => ({ ...prev, invoices: false }));
-    }
-  };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  // Fetch inventory items from Supabase
-  const fetchInventory = async () => {
-    try {
-      setIsLoading(prev => ({ ...prev, inventory: true }));
-      
+  // Fetch inventory using React Query
+  const { data: inventoryData = [], isLoading: isLoadingInventory } = useQuery({
+    queryKey: ['inventory', user?.id, 'reports'],
+    queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from('inventory')
         .select('id, name, description, category, quantity, unit, reorder_level, cost_price, selling_price, supplier, location')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('name', { ascending: true });
-      
       if (error) throw error;
-      
-      setInventoryData(data || []);
-    } catch (error) {
-      console.error('Error fetching inventory:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch inventory data. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(prev => ({ ...prev, inventory: false }));
-    }
-  };
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  // Fetch clinic information from Supabase
-  const fetchClinicInfo = async () => {
-    try {
-      setIsLoading(prev => ({ ...prev, clinic: true }));
-      
+  // Fetch clinic info using React Query
+  const { data: clinicInfo = {
+    clinicName: "",
+    address: "",
+    phone: "",
+    email: "",
+    openingHours: "",
+    description: ""
+  }, isLoading: isLoadingClinic } = useQuery({
+    queryKey: ['clinicInfo', user?.id],
+    queryFn: async () => {
+      if (!user) return {
+        clinicName: "",
+        address: "",
+        phone: "",
+        email: "",
+        openingHours: "",
+        description: ""
+      };
       const { data, error } = await supabase
         .from('clinics')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .single();
-      
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-      
+      if (error && error.code !== 'PGRST116') throw error;
       if (data) {
-        setClinicInfo({
+        return {
           clinicName: data.name || "",
           address: data.address || "",
           phone: data.phone || "",
           email: data.email || "",
           openingHours: data.opening_hours || "",
           description: data.description || ""
-        });
+        };
       }
-    } catch (error) {
-      console.error('Error fetching clinic information:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch clinic information. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(prev => ({ ...prev, clinic: false }));
-    }
-  };
+      return {
+        clinicName: "",
+        address: "",
+        phone: "",
+        email: "",
+        openingHours: "",
+        description: ""
+      };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Format date for display
   const formatDate = (dateString: string | null) => {
@@ -612,7 +548,7 @@ const Reports = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="py-2 px-4 pb-4">
-                  {isLoading.patients || isLoading.clinic ? (
+                  {isLoadingPatients || isLoadingClinic ? (
                     <div className="flex justify-center items-center py-2">
                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
@@ -650,7 +586,7 @@ const Reports = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="py-2 px-4 pb-4">
-                  {isLoading.appointments || isLoading.clinic ? (
+                  {isLoadingAppointments || isLoadingClinic ? (
                     <div className="flex justify-center items-center py-2">
                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
@@ -688,7 +624,7 @@ const Reports = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="py-2 px-4 pb-4">
-                  {isLoading.invoices || isLoading.clinic ? (
+                  {isLoadingInvoices || isLoadingClinic ? (
                     <div className="flex justify-center items-center py-2">
                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
@@ -726,7 +662,7 @@ const Reports = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="py-2 px-4 pb-4">
-                  {isLoading.inventory || isLoading.clinic ? (
+                  {isLoadingInventory || isLoadingClinic ? (
                     <div className="flex justify-center items-center py-2">
                       <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                     </div>
