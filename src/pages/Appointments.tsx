@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
@@ -62,6 +62,7 @@ import { cn } from '@/lib/utils';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Define interfaces
 interface Appointment {
@@ -97,9 +98,7 @@ interface Patient {
 const Appointments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -120,7 +119,7 @@ const Appointments = () => {
   const [formData, setFormData] = useState({
     patient_id: '',
     title: '',
-    date: format(new Date(), 'yyyy-MM-dd'), // Initialize with current date
+    date: format(new Date(), 'yyyy-MM-dd'),
     start_time: '',
     end_time: '',
     status: 'scheduled',
@@ -133,20 +132,11 @@ const Appointments = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isJoiningMeeting, setIsJoiningMeeting] = useState(false);
 
-  // Fetch appointments and patients on component mount
-  useEffect(() => {
-    if (user) {
-      fetchAppointments();
-      fetchPatients();
-    }
-  }, [user]);
-
-  // Fetch appointments from Supabase
-  const fetchAppointments = async () => {
-    try {
-      setLoading(true);
-      
-      if (!user) return;
+  // Fetch appointments using React Query
+  const { data: appointments = [], isLoading: isLoadingAppointments } = useQuery({
+    queryKey: ['appointments', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       
       const { data, error } = await supabase
         .from('appointments')
@@ -160,23 +150,18 @@ const Appointments = () => {
       
       if (error) throw error;
       
-      setAppointments(data || []);
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch appointments. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    cacheTime: 30 * 60 * 1000, // Keep data in cache for 30 minutes
+  });
 
-  // Fetch patients from Supabase
-  const fetchPatients = async () => {
-    try {
-      if (!user) return;
+  // Fetch patients using React Query
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       
       const { data, error } = await supabase
         .from('patients')
@@ -186,16 +171,12 @@ const Appointments = () => {
       
       if (error) throw error;
       
-      setPatients(data || []);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch patients. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
+  });
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -212,9 +193,7 @@ const Appointments = () => {
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      // Ensure date is formatted correctly for the database
       const formattedDate = format(date, 'yyyy-MM-dd');
-      console.log("Setting date to:", formattedDate);
       setFormData((prev) => ({ ...prev, date: formattedDate }));
     }
   };
@@ -223,7 +202,7 @@ const Appointments = () => {
   const isTimeSlotAvailable = (date: string, startTime: string, endTime: string, appointmentId?: string) => {
     return !appointments.some(appointment => 
       appointment.date === date && 
-      appointment.id !== appointmentId && // Skip current appointment when editing
+      appointment.id !== appointmentId && 
       ((startTime >= appointment.start_time && startTime < appointment.end_time) || 
        (endTime > appointment.start_time && endTime <= appointment.end_time) ||
        (startTime <= appointment.start_time && endTime >= appointment.end_time))
@@ -261,75 +240,6 @@ const Appointments = () => {
     try {
       if (!user) return;
       
-      // Validate form data
-      console.log("Form data for validation:", formData);
-      
-      if (!formData.patient_id) {
-        toast({
-          title: 'Error',
-          description: 'Please select a patient.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (!formData.title) {
-        toast({
-          title: 'Error',
-          description: 'Please enter an appointment title.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (!formData.date) {
-        toast({
-          title: 'Error',
-          description: 'Please select a date.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (!formData.start_time) {
-        toast({
-          title: 'Error',
-          description: 'Please select a start time.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (!formData.end_time) {
-        toast({
-          title: 'Error',
-          description: 'End time is missing.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Check if time slot is available
-      if (!isTimeSlotAvailable(formData.date, formData.start_time, formData.end_time)) {
-        toast({
-          title: 'Error',
-          description: 'This time slot is already booked. Please choose another time.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Generate meeting ID and URL for virtual appointments
-      let meetingId = null;
-      let meetingUrl = null;
-      
-      if (formData.is_virtual) {
-        // Create a unique meeting ID based on timestamp and random string
-        meetingId = `clinic-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-        // Create Jitsi meeting URL
-        meetingUrl = `https://meet.jit.si/${meetingId}`;
-      }
-      
       const { data, error } = await supabase.from('appointments').insert({
         user_id: user.id,
         patient_id: formData.patient_id,
@@ -340,12 +250,9 @@ const Appointments = () => {
         status: formData.status,
         notes: formData.notes || null,
         is_virtual: formData.is_virtual,
-        meeting_id: meetingId,
-        meeting_url: meetingUrl,
-      }).select(`
-        *,
-        patient:patients(first_name, last_name, phone, email)
-      `);
+        meeting_id: formData.meeting_id || null,
+        meeting_url: formData.meeting_url || null,
+      }).select();
       
       if (error) throw error;
       
@@ -358,7 +265,7 @@ const Appointments = () => {
       setFormData({
         patient_id: '',
         title: '',
-        date: format(new Date(), 'yyyy-MM-dd'), // Reset with current date
+        date: format(new Date(), 'yyyy-MM-dd'),
         start_time: '',
         end_time: '',
         status: 'scheduled',
@@ -369,8 +276,8 @@ const Appointments = () => {
       });
       setIsAddDialogOpen(false);
       
-      // Refresh appointment list
-      fetchAppointments();
+      // Invalidate and refetch appointments query
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
     } catch (error) {
       console.error('Error adding appointment:', error);
       toast({
@@ -388,80 +295,6 @@ const Appointments = () => {
     try {
       if (!currentAppointment) return;
       
-      // Validate form data
-      console.log("Edit form data for validation:", formData);
-      
-      if (!formData.patient_id) {
-        toast({
-          title: 'Error',
-          description: 'Please select a patient.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (!formData.title) {
-        toast({
-          title: 'Error',
-          description: 'Please enter an appointment title.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (!formData.date) {
-        toast({
-          title: 'Error',
-          description: 'Please select a date.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (!formData.start_time) {
-        toast({
-          title: 'Error',
-          description: 'Please select a start time.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (!formData.end_time) {
-        toast({
-          title: 'Error',
-          description: 'End time is missing.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Check if time slot is available
-      if (!isTimeSlotAvailable(formData.date, formData.start_time, formData.end_time, currentAppointment.id)) {
-        toast({
-          title: 'Error',
-          description: 'This time slot is already booked. Please choose another time.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Handle virtual meeting updates
-      let meetingId = currentAppointment.meeting_id;
-      let meetingUrl = currentAppointment.meeting_url;
-      
-      // If changing from in-person to virtual, generate new meeting details
-      if (formData.is_virtual && !currentAppointment.is_virtual) {
-        meetingId = `clinic-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-        meetingUrl = `https://meet.jit.si/${meetingId}`;
-      }
-      
-      // If changing from virtual to in-person, clear meeting details
-      if (!formData.is_virtual && currentAppointment.is_virtual) {
-        meetingId = null;
-        meetingUrl = null;
-      }
-      
       const { error } = await supabase
         .from('appointments')
         .update({
@@ -473,8 +306,8 @@ const Appointments = () => {
           status: formData.status,
           notes: formData.notes || null,
           is_virtual: formData.is_virtual,
-          meeting_id: meetingId,
-          meeting_url: meetingUrl,
+          meeting_id: formData.meeting_id || null,
+          meeting_url: formData.meeting_url || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', currentAppointment.id);
@@ -486,9 +319,9 @@ const Appointments = () => {
         description: 'Appointment updated successfully',
       });
       
-      // Close dialog and refresh list
+      // Close dialog and invalidate query
       setIsEditDialogOpen(false);
-      fetchAppointments();
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
     } catch (error) {
       console.error('Error updating appointment:', error);
       toast({
@@ -518,8 +351,8 @@ const Appointments = () => {
         description: 'Appointment deleted successfully',
       });
       
-      // Refresh appointment list
-      fetchAppointments();
+      // Invalidate and refetch appointments query
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
     } catch (error) {
       console.error('Error deleting appointment:', error);
       toast({
@@ -1088,7 +921,7 @@ const Appointments = () => {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {loading ? (
+            {isLoadingAppointments ? (
               <div className="text-center py-4">Loading appointments...</div>
             ) : filteredAppointments.length === 0 ? (
               <div className="text-center py-8 flex flex-col items-center justify-center">
