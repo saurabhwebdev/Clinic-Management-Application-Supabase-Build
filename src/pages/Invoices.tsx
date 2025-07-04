@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -33,6 +33,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pencil, Trash2, FilePlus, Search, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import PrintInvoice from '@/components/PrintInvoice';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Patient {
   id: string;
@@ -83,11 +84,8 @@ interface Region {
 const Invoices = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [regions, setRegions] = useState<Region[]>([]);
+  const queryClient = useQueryClient();
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
@@ -112,41 +110,41 @@ const Invoices = () => {
   const [total, setTotal] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [userRegionId, setUserRegionId] = useState<string>('');
-  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  useEffect(() => {
-    if (user) {
-      fetchInvoices();
-      fetchPatients();
-      fetchUserRegion();
-      fetchRegions();
-    } else {
-      navigate('/signin');
-    }
-  }, [user, navigate]);
+  // Fetch patients using React Query
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('patients')
+        .select('id, first_name, last_name')
+        .eq('user_id', user.id)
+        .order('first_name', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    // Calculate subtotal, tax, and total whenever invoice items change
-    calculateTotals();
-  }, [invoiceItems, tax, discount]);
-
-  const fetchInvoices = async () => {
-    try {
-      setIsLoading(true);
+  // Fetch invoices using React Query
+  const { data: invoices = [], isLoading } = useQuery({
+    queryKey: ['invoices', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from('invoices')
         .select(`
           *,
           patient:patients(first_name, last_name)
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-
       if (error) throw error;
-
       // Fetch invoice items for each invoice
       const invoicesWithItems = await Promise.all(
         (data || []).map(async (invoice) => {
@@ -154,85 +152,65 @@ const Invoices = () => {
             .from('invoice_items')
             .select('*')
             .eq('invoice_id', invoice.id);
-
           if (itemsError) throw itemsError;
-
           return {
             ...invoice,
             items: items || [],
           };
         })
       );
+      return invoicesWithItems;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
 
-      setInvoices(invoicesWithItems);
-    } catch (error) {
-      console.error('Error fetching invoices:', error);
-      toast.error('Failed to load invoices');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchPatients = async () => {
-    try {
+  // Fetch regions using React Query
+  const { data: regions = [] } = useQuery({
+    queryKey: ['regions'],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from('patients')
-        .select('id, first_name, last_name')
-        .eq('user_id', user?.id)
-        .order('first_name', { ascending: true });
-
+        .from('regions')
+        .select('*')
+        .order('name', { ascending: true });
       if (error) throw error;
-      setPatients(data || []);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-      toast.error('Failed to load patients');
-    }
-  };
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const fetchUserRegion = async () => {
-    try {
+  // Fetch user region using React Query
+  useQuery({
+    queryKey: ['userRegion', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
       const { data, error } = await supabase
         .from('user_regions')
         .select('region_id')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
+      if (error && error.code !== 'PGRST116') throw error;
       if (data?.region_id) {
         setUserRegionId(data.region_id);
-        
         // Fetch region details
         const { data: regionData, error: regionError } = await supabase
           .from('regions')
           .select('*')
           .eq('id', data.region_id)
           .single();
-        
         if (regionError) throw regionError;
-        
         setSelectedRegion(regionData);
       }
-    } catch (error) {
-      console.error('Error fetching user region:', error);
-    }
-  };
+      return null;
+    },
+    enabled: !!user,
+  });
 
-  const fetchRegions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('regions')
-        .select('*')
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-      setRegions(data || []);
-    } catch (error) {
-      console.error('Error fetching regions:', error);
-    }
-  };
+  // Remove useEffect for navigation, just redirect if no user
+  if (!user) {
+    navigate('/signin');
+    return null;
+  }
 
   const handleAddInvoiceItem = () => {
     setInvoiceItems([
@@ -382,7 +360,7 @@ const Invoices = () => {
       toast.success('Invoice created successfully');
       setIsDialogOpen(false);
       resetForm();
-      fetchInvoices();
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     } catch (error) {
       console.error('Error creating invoice:', error);
       toast.error('Failed to create invoice');
@@ -471,7 +449,7 @@ const Invoices = () => {
       toast.success('Invoice updated successfully');
       setIsDialogOpen(false);
       resetForm();
-      fetchInvoices();
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     } catch (error) {
       console.error('Error updating invoice:', error);
       toast.error('Failed to update invoice');
@@ -500,7 +478,7 @@ const Invoices = () => {
 
       toast.success('Invoice deleted successfully');
       setIsDeleteDialogOpen(false);
-      fetchInvoices();
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     } catch (error) {
       console.error('Error deleting invoice:', error);
       toast.error('Failed to delete invoice');
@@ -876,7 +854,6 @@ const Invoices = () => {
                   <Select
                     value={selectedPatientId}
                     onValueChange={setSelectedPatientId}
-                    disabled={isLoading}
                   >
                     <SelectTrigger id="patient">
                       <SelectValue placeholder="Select patient" />
