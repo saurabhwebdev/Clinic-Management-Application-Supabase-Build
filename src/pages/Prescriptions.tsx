@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -33,6 +33,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pencil, Trash2, FilePlus, Search, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import PrintPrescription from '@/components/PrintPrescription';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Patient {
   id: string;
@@ -73,10 +74,7 @@ interface Prescription {
 const Prescriptions = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [visits, setVisits] = useState<Visit[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
@@ -91,42 +89,42 @@ const Prescriptions = () => {
     { medication_name: '', dosage: '', frequency: '', duration: '', instructions: '' },
   ]);
   const [searchQuery, setSearchQuery] = useState('');
-  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  useEffect(() => {
-    if (user) {
-      fetchPrescriptions();
-      fetchPatients();
-    } else {
-      navigate('/signin');
-    }
-  }, [user, navigate]);
+  // Fetch patients using React Query
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('patients')
+        .select('id, first_name, last_name')
+        .eq('user_id', user.id)
+        .order('first_name', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    if (selectedPatientId) {
-      fetchVisitsForPatient(selectedPatientId);
-    } else {
-      setVisits([]);
-    }
-  }, [selectedPatientId]);
-
-  const fetchPrescriptions = async () => {
-    try {
-      setIsLoading(true);
+  // Fetch prescriptions using React Query
+  const { data: prescriptions = [], isLoading } = useQuery({
+    queryKey: ['prescriptions', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from('prescriptions')
         .select(`
           *,
           patient:patients(first_name, last_name)
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-
       if (error) throw error;
-
       // Fetch prescription items for each prescription
       const prescriptionsWithItems = await Promise.all(
         (data || []).map(async (prescription) => {
@@ -134,56 +132,43 @@ const Prescriptions = () => {
             .from('prescription_items')
             .select('*')
             .eq('prescription_id', prescription.id);
-
           if (itemsError) throw itemsError;
-
           return {
             ...prescription,
             items: items || [],
           };
         })
       );
+      return prescriptionsWithItems;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
+  });
 
-      setPrescriptions(prescriptionsWithItems);
-    } catch (error) {
-      console.error('Error fetching prescriptions:', error);
-      toast.error('Failed to load prescriptions');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchPatients = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('id, first_name, last_name')
-        .eq('user_id', user?.id)
-        .order('first_name', { ascending: true });
-
-      if (error) throw error;
-      setPatients(data || []);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-      toast.error('Failed to load patients');
-    }
-  };
-
-  const fetchVisitsForPatient = async (patientId: string) => {
-    try {
+  // Fetch visits for selected patient using React Query
+  const { data: visits = [] } = useQuery({
+    queryKey: ['visits', selectedPatientId],
+    queryFn: async () => {
+      if (!selectedPatientId) return [];
       const { data, error } = await supabase
         .from('patient_visits')
         .select('id, visit_date, reason_for_visit')
-        .eq('patient_id', patientId)
+        .eq('patient_id', selectedPatientId)
         .order('visit_date', { ascending: false });
-
       if (error) throw error;
-      setVisits(data || []);
-    } catch (error) {
-      console.error('Error fetching visits:', error);
-      toast.error('Failed to load patient visits');
-    }
-  };
+      return data || [];
+    },
+    enabled: !!selectedPatientId,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
+  });
+
+  // Remove useEffect for navigation, just redirect if no user
+  if (!user) {
+    navigate('/signin');
+    return null;
+  }
 
   const handleAddPrescriptionItem = () => {
     setPrescriptionItems([
@@ -213,32 +198,25 @@ const Prescriptions = () => {
       toast.error('Please select a patient');
       return;
     }
-
     if (prescriptionItems.length === 0 || !prescriptionItems[0].medication_name) {
       toast.error('Please add at least one medication');
       return;
     }
-
     try {
-      // First, create the prescription
       const prescriptionData = {
-        user_id: user?.id,
+        user_id: user.id,
         patient_id: selectedPatientId,
         visit_id: selectedVisitId === 'none' ? null : selectedVisitId,
         prescription_date: prescriptionDate,
         diagnosis,
         notes,
       };
-
       const { data: prescriptionResult, error: prescriptionError } = await supabase
         .from('prescriptions')
         .insert(prescriptionData)
         .select()
         .single();
-
       if (prescriptionError) throw prescriptionError;
-
-      // Then, create the prescription items
       const prescriptionItemsData = prescriptionItems.map((item) => ({
         prescription_id: prescriptionResult.id,
         medication_name: item.medication_name,
@@ -247,17 +225,14 @@ const Prescriptions = () => {
         duration: item.duration,
         instructions: item.instructions,
       }));
-
       const { error: itemsError } = await supabase
         .from('prescription_items')
         .insert(prescriptionItemsData);
-
       if (itemsError) throw itemsError;
-
       toast.success('Prescription created successfully');
       resetForm();
       setIsDialogOpen(false);
-      fetchPrescriptions();
+      queryClient.invalidateQueries({ queryKey: ['prescriptions'] });
     } catch (error) {
       console.error('Error creating prescription:', error);
       toast.error('Failed to create prescription');
@@ -266,9 +241,7 @@ const Prescriptions = () => {
 
   const handleUpdatePrescription = async () => {
     if (!selectedPrescription) return;
-
     try {
-      // Update the prescription
       const prescriptionData = {
         patient_id: selectedPatientId,
         visit_id: selectedVisitId === 'none' ? null : selectedVisitId,
@@ -277,23 +250,16 @@ const Prescriptions = () => {
         notes,
         updated_at: new Date().toISOString(),
       };
-
       const { error: prescriptionError } = await supabase
         .from('prescriptions')
         .update(prescriptionData)
         .eq('id', selectedPrescription.id);
-
       if (prescriptionError) throw prescriptionError;
-
-      // Delete existing prescription items
       const { error: deleteError } = await supabase
         .from('prescription_items')
         .delete()
         .eq('prescription_id', selectedPrescription.id);
-
       if (deleteError) throw deleteError;
-
-      // Create new prescription items
       const prescriptionItemsData = prescriptionItems.map((item) => ({
         prescription_id: selectedPrescription.id,
         medication_name: item.medication_name,
@@ -302,17 +268,14 @@ const Prescriptions = () => {
         duration: item.duration,
         instructions: item.instructions,
       }));
-
       const { error: itemsError } = await supabase
         .from('prescription_items')
         .insert(prescriptionItemsData);
-
       if (itemsError) throw itemsError;
-
       toast.success('Prescription updated successfully');
       resetForm();
       setIsDialogOpen(false);
-      fetchPrescriptions();
+      queryClient.invalidateQueries({ queryKey: ['prescriptions'] });
     } catch (error) {
       console.error('Error updating prescription:', error);
       toast.error('Failed to update prescription');
@@ -321,18 +284,15 @@ const Prescriptions = () => {
 
   const handleDeletePrescription = async () => {
     if (!selectedPrescription) return;
-
     try {
       const { error } = await supabase
         .from('prescriptions')
         .delete()
         .eq('id', selectedPrescription.id);
-
       if (error) throw error;
-
       toast.success('Prescription deleted successfully');
       setIsDeleteDialogOpen(false);
-      fetchPrescriptions();
+      queryClient.invalidateQueries({ queryKey: ['prescriptions'] });
     } catch (error) {
       console.error('Error deleting prescription:', error);
       toast.error('Failed to delete prescription');
@@ -382,12 +342,10 @@ const Prescriptions = () => {
     if (!searchQuery.trim()) {
       return prescriptions;
     }
-    
     const query = searchQuery.toLowerCase();
     return prescriptions.filter(prescription => {
       const patientName = `${prescription.patient.first_name} ${prescription.patient.last_name}`.toLowerCase();
       const medications = prescription.items.map(item => item.medication_name.toLowerCase()).join(' ');
-      
       return (
         patientName.includes(query) ||
         (prescription.diagnosis && prescription.diagnosis.toLowerCase().includes(query)) ||
@@ -397,13 +355,11 @@ const Prescriptions = () => {
   };
 
   const filteredPrescriptions = getFilteredPrescriptions();
-  
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredPrescriptions.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredPrescriptions.length / itemsPerPage);
-
   // Change page
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
   const nextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
