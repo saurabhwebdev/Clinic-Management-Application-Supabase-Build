@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
+import { useSettings } from '@/lib/SettingsContext';
 import { supabase } from '@/lib/supabase';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon, Users, Receipt, Package, FileText, AlertCircle, CalendarPlus } from 'lucide-react';
+import { CalendarIcon, Users, Receipt, Package, FileText, AlertCircle, CalendarPlus, Settings } from 'lucide-react';
 import PendingBookings from '@/components/PendingBookings';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 // Define interfaces
 interface DashboardStats {
@@ -49,6 +59,7 @@ interface Region {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { settingsStatus, refreshSettingsStatus } = useSettings();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
     appointmentsCount: 0,
@@ -62,6 +73,7 @@ const Dashboard = () => {
   const [recentAppointments, setRecentAppointments] = useState<any[]>([]);
   const [lowStockItems, setLowStockItems] = useState<any[]>([]);
   const [userRegion, setUserRegion] = useState<Region | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -69,6 +81,36 @@ const Dashboard = () => {
       fetchDashboardData();
     }
   }, [user]);
+
+  // Check if settings modal should be shown based on last dismissal time
+  useEffect(() => {
+    if (!settingsStatus.allComplete && user) {
+      const lastDismissedTime = localStorage.getItem(`settings_dismissed_${user.id}`);
+      const currentTime = Date.now();
+      
+      // If settings are not complete and either:
+      // 1. The modal was never dismissed, or
+      // 2. It's been more than 1 hour since last dismissal
+      if (!lastDismissedTime || (currentTime - parseInt(lastDismissedTime)) > 3600000) {
+        setShowSettingsModal(true);
+      }
+    }
+  }, [settingsStatus, user]);
+
+  // Handle modal close - store dismissal time in local storage
+  const handleModalClose = (open: boolean) => {
+    setShowSettingsModal(open);
+    
+    // If closing the modal and settings are not complete, store dismissal time
+    if (!open && !settingsStatus.allComplete && user) {
+      localStorage.setItem(`settings_dismissed_${user.id}`, Date.now().toString());
+    }
+    
+    // If settings are complete and modal is closed, clear the dismissal time
+    if (!open && settingsStatus.allComplete && user) {
+      localStorage.removeItem(`settings_dismissed_${user.id}`);
+    }
+  };
 
   // Fetch user's region settings
   const fetchUserRegion = async () => {
@@ -245,6 +287,61 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-gray-600 mt-2">Welcome back, {user?.email?.split('@')[0]}</p>
           </div>
+
+          {/* Settings Modal */}
+          <Dialog open={showSettingsModal} onOpenChange={handleModalClose}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-xl">Complete Your Setup</DialogTitle>
+                <DialogDescription className="pt-4">
+                  Before you can fully use the application, you need to complete your settings.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <div className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${settingsStatus.profileComplete ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      {settingsStatus.profileComplete && <span className="text-white text-xs">✓</span>}
+                    </div>
+                    <span className={settingsStatus.profileComplete ? 'text-green-600' : 'text-gray-600'}>Profile Information</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${settingsStatus.clinicComplete ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      {settingsStatus.clinicComplete && <span className="text-white text-xs">✓</span>}
+                    </div>
+                    <span className={settingsStatus.clinicComplete ? 'text-green-600' : 'text-gray-600'}>Clinic Details</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${settingsStatus.doctorComplete ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      {settingsStatus.doctorComplete && <span className="text-white text-xs">✓</span>}
+                    </div>
+                    <span className={settingsStatus.doctorComplete ? 'text-green-600' : 'text-gray-600'}>Doctor Information</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${settingsStatus.regionComplete ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      {settingsStatus.regionComplete && <span className="text-white text-xs">✓</span>}
+                    </div>
+                    <span className={settingsStatus.regionComplete ? 'text-green-600' : 'text-gray-600'}>Regional Settings</span>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleModalClose(false)}
+                  className="w-full sm:w-auto"
+                >
+                  Remind Me Later
+                </Button>
+                <Link to="/settings" className="w-full sm:w-auto">
+                  <Button className="w-full" type="button">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Go to Settings
+                  </Button>
+                </Link>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Link to="/appointments">

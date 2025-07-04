@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
+import { useSettings } from "@/lib/SettingsContext";
 import { supabase } from "@/lib/supabase";
 import Layout from "@/components/Layout";
 import { Loader2 } from "lucide-react";
@@ -27,6 +28,7 @@ interface Region {
 
 const Settings = () => {
   const { user } = useAuth();
+  const { refreshSettingsStatus } = useSettings();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -318,6 +320,9 @@ const Settings = () => {
         title: "Profile updated",
         description: "Your profile information has been saved successfully.",
       });
+      
+      // Refresh settings status
+      refreshSettingsStatus();
     } catch (error) {
       toast({
         title: "Error",
@@ -356,6 +361,9 @@ const Settings = () => {
         title: "Clinic settings updated",
         description: "Your clinic information has been saved successfully.",
       });
+      
+      // Refresh settings status
+      refreshSettingsStatus();
     } catch (error) {
       toast({
         title: "Error",
@@ -410,6 +418,9 @@ const Settings = () => {
       
       // Refresh doctor data to ensure we have the latest
       fetchDoctorData();
+      
+      // Refresh settings status
+      refreshSettingsStatus();
     } catch (error) {
       console.error("Error updating doctor details:", error);
       toast({
@@ -486,6 +497,9 @@ const Settings = () => {
         title: "Region settings updated",
         description: "Your region, currency, and financial settings have been saved successfully.",
       });
+      
+      // Refresh settings status
+      refreshSettingsStatus();
     } catch (error) {
       toast({
         title: "Error",
@@ -533,6 +547,9 @@ const Settings = () => {
             title: "Public booking settings updated",
             description: "Your public booking settings have been saved successfully.",
           });
+          
+          // Refresh settings status
+          refreshSettingsStatus();
         }
       }
     } catch (error) {
@@ -562,6 +579,9 @@ const Settings = () => {
             title: "Email settings updated",
             description: "Your email configuration has been saved successfully.",
           });
+          
+          // Refresh settings status
+          refreshSettingsStatus();
         }
       }
     } catch (error) {

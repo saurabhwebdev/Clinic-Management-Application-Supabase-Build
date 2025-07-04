@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
+import { useSettings } from '@/lib/SettingsContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -42,6 +43,7 @@ import { cn } from '@/lib/utils';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const { settingsStatus } = useSettings();
   const location = useLocation();
 
   const handleSignOut = async () => {
@@ -51,6 +53,9 @@ const Navbar = () => {
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+
+  // Check if settings are incomplete
+  const hasIncompleteSettings = user && !settingsStatus.allComplete;
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -119,8 +124,15 @@ const Navbar = () => {
                   />
                   <NavItem 
                     to="/settings" 
-                    icon={<Settings size={18} />} 
-                    label="Settings" 
+                    icon={
+                      <div className="relative">
+                        <Settings size={18} />
+                        {hasIncompleteSettings && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                        )}
+                      </div>
+                    } 
+                    label={hasIncompleteSettings ? "Settings (Incomplete)" : "Settings"}
                     isActive={isActive("/settings")} 
                   />
                 </>
@@ -254,8 +266,15 @@ const Navbar = () => {
                           <SheetClose asChild>
                             <MobileNavItem 
                               to="/settings" 
-                              label="Settings" 
-                              icon={<Settings size={18} />}
+                              label={hasIncompleteSettings ? "Settings (Incomplete)" : "Settings"}
+                              icon={
+                                <div className="relative">
+                                  <Settings size={18} />
+                                  {hasIncompleteSettings && (
+                                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                                  )}
+                                </div>
+                              }
                               isActive={isActive("/settings")} 
                             />
                           </SheetClose>
