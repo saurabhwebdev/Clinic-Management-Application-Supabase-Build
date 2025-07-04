@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthContext';
@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Pencil, Trash2, Search, UserPlus, ChevronLeft, ChevronRight, MoreVertical, FileText } from 'lucide-react';
 import PatientExport from '@/components/PatientExport';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Define patient interface
 interface Patient {
@@ -53,8 +54,7 @@ interface Patient {
 const Patients = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -80,17 +80,11 @@ const Patients = () => {
     medical_history: '',
   });
 
-  // Fetch patients on component mount
-  useEffect(() => {
-    fetchPatients();
-  }, [user]);
-
-  // Fetch patients from Supabase
-  const fetchPatients = async () => {
-    try {
-      setLoading(true);
-      
-      if (!user) return;
+  // Fetch patients using React Query
+  const { data: patients = [], isLoading } = useQuery({
+    queryKey: ['patients', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       
       const { data, error } = await supabase
         .from('patients')
@@ -100,18 +94,12 @@ const Patients = () => {
       
       if (error) throw error;
       
-      setPatients(data || []);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch patients. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    cacheTime: 30 * 60 * 1000, // Keep data in cache for 30 minutes
+  });
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -171,8 +159,8 @@ const Patients = () => {
       });
       setIsAddDialogOpen(false);
       
-      // Refresh patient list
-      fetchPatients();
+      // Invalidate and refetch patients query
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error adding patient:', error);
       toast({
@@ -216,9 +204,9 @@ const Patients = () => {
         description: 'Patient updated successfully',
       });
       
-      // Close dialog and refresh list
+      // Close dialog and invalidate query
       setIsEditDialogOpen(false);
-      fetchPatients();
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error updating patient:', error);
       toast({
@@ -248,8 +236,8 @@ const Patients = () => {
         description: 'Patient deleted successfully',
       });
       
-      // Refresh patient list
-      fetchPatients();
+      // Invalidate and refetch patients query
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
     } catch (error) {
       console.error('Error deleting patient:', error);
       toast({
@@ -514,7 +502,7 @@ const Patients = () => {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {loading ? (
+            {isLoading ? (
               <div className="text-center py-4">Loading patients...</div>
             ) : filteredPatients.length === 0 ? (
               <div className="text-center py-4">
